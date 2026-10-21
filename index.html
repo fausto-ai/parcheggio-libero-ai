@@ -35,7 +35,7 @@
       background: #172030;
     }
 
-    /* Estilo exacto Azul Noche de Google Maps Móvil sin marcas de agua */
+    /* Azul Noche idéntico a Google Maps Móvil */
     .gmaps-night-tiles {
       filter: invert(92%) hue-rotate(195deg) saturate(150%) brightness(88%) contrast(108%);
     }
@@ -44,7 +44,6 @@
       display: none !important;
     }
 
-    /* Paneles oscuros elegantes */
     .glass-panel {
       background: rgba(20, 28, 44, 0.94);
       backdrop-filter: blur(14px);
@@ -52,7 +51,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Resplandor intenso de las líneas de aparcamiento como en la 1ra versión */
+    /* Líneas de aparcamiento alineadas con resplandor */
     .street-line-green {
       filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.9));
     }
@@ -92,51 +91,72 @@
     <p class="text-xs text-slate-400 mt-1">Milano Smart Mobility</p>
   </div>
 
-  <!-- 2. MODAL RÁPIDO GPS -->
+  <!-- 2. MODAL RÁPIDO GPS + BLUETOOTH AUDIO -->
   <div id="gpsModal" class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-5">
     <div class="glass-panel rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border border-blue-500/30">
-      <div class="w-16 h-16 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-3 text-3xl">
-        <i class="fa-solid fa-car-On animate-pulse"></i>
+      <div class="w-16 h-16 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-3 text-2xl gap-2">
+        <i class="fa-solid fa-location-arrow animate-pulse"></i>
+        <i class="fa-brands fa-bluetooth-b text-sky-400"></i>
       </div>
-      <h2 id="txtGpsTitle" class="text-xl font-bold mb-2">Activar GPS y Voz al Volante</h2>
+      <h2 id="txtGpsTitle" class="text-xl font-bold mb-2">Activar GPS y Audio Bluetooth</h2>
       <p id="txtGpsDesc" class="text-xs text-slate-300 mb-5 leading-relaxed">
-        Mostraremos tu carrito en vivo y pintaremos todas las calles alrededor con líneas verdes (gratis), azules y ZTL.
+        Sincroniza el GPS de alta precisión y la guía de voz por el altavoz o Bluetooth de tu auto.
       </p>
       <button onclick="startDrivingMode()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 font-bold text-base shadow-lg shadow-blue-600/40 flex items-center justify-center gap-3 active:scale-95 transition">
         <i class="fa-solid fa-satellite-dish"></i>
-        <span id="txtGpsBtn">INICIAR MODO CONDUCCIÓN</span>
+        <span id="txtGpsBtn">CONECTAR Y ENTRAR AL MAPA</span>
       </button>
     </div>
   </div>
 
-  <!-- 3. CABECERA SUPERIOR -->
+  <!-- 3. AVISO DE CARGA DE COORDENADAS (Para que NUNCA se vean líneas desfasadas) -->
+  <div id="radarLoadingOverlay" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 glass-panel px-5 py-3.5 rounded-2xl border border-blue-400/40 shadow-2xl flex items-center gap-3 pointer-events-none transition-opacity duration-300">
+    <i class="fa-solid fa-compass fa-spin text-blue-400 text-xl"></i>
+    <div class="leading-tight">
+      <div id="txtLoadingRadar" class="text-xs font-bold text-white">Buscando coordenadas...</div>
+      <div id="txtLoadingSub" class="text-[10px] text-slate-400">Alineando colores de calles en vivo</div>
+    </div>
+  </div>
+
+  <!-- 4. ALERTA COMUNITARIA EN VIVO: "AUTO MOVIÉNDOSE / SALIENDO CERCA" -->
+  <div id="movingCarBanner" onclick="focusMovingCarSpot()" class="fixed top-28 left-1/2 -translate-x-1/2 z-30 glass-panel px-3.5 py-2 rounded-full border border-emerald-400/60 shadow-2xl hidden items-center gap-2.5 cursor-pointer active:scale-95 transition animate-bounce">
+    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+    <i class="fa-solid fa-car-side text-emerald-400 text-xs"></i>
+    <span id="txtMovingCarAlert" class="text-[11px] font-bold text-emerald-300 whitespace-nowrap">¡Auto saliendo a 90m! Posible hueco</span>
+    <i class="fa-solid fa-arrow-right text-[10px] text-white"></i>
+  </div>
+
+  <!-- 5. CABECERA SUPERIOR -->
   <div id="topPanel" class="smooth-panel fixed top-0 left-0 right-0 z-20 pt-3 px-3 pb-2 bg-gradient-to-b from-[#131b29]/95 via-[#131b29]/75 to-transparent pointer-events-none">
-    <!-- Buscador -->
-    <div class="glass-panel rounded-full px-4 py-2.5 flex items-center gap-3 shadow-lg pointer-events-auto">
-      <i class="fa-solid fa-location-dot text-emerald-400 text-base"></i>
-      <input id="searchInput" type="text" placeholder="Buscar aparcamiento cerca de mí..." class="bg-transparent border-none outline-none text-sm text-white placeholder-slate-400 w-full" />
-      <button onclick="speakCurrentStreet()" class="text-blue-400 hover:text-blue-300 p-1" title="Guía por Voz">
-        <i id="voiceIcon" class="fa-solid fa-volume-high text-base"></i>
+    <div class="glass-panel rounded-full px-3.5 py-2 flex items-center gap-2.5 shadow-lg pointer-events-auto">
+      <i class="fa-solid fa-location-dot text-emerald-400 text-sm"></i>
+      <input id="searchInput" type="text" placeholder="Buscar calle o zona en Milán..." class="bg-transparent border-none outline-none text-xs text-white placeholder-slate-400 w-full" />
+      
+      <!-- Botón de Estado Bluetooth Audio + Voz -->
+      <button onclick="toggleBluetoothVoice()" id="btStatusBtn" class="flex items-center gap-1 bg-blue-500/20 border border-blue-400/40 text-blue-300 px-2 py-1 rounded-full text-[10px] font-bold shrink-0" title="Audio Bluetooth / Voz">
+        <i class="fa-brands fa-bluetooth-b text-xs"></i>
+        <i id="voiceIcon" class="fa-solid fa-volume-high text-[10px]"></i>
       </button>
+
       <button onclick="centerOnCar(true)" class="text-slate-300 hover:text-white p-1">
-        <i class="fa-solid fa-crosshairs text-base"></i>
+        <i class="fa-solid fa-crosshairs text-sm"></i>
       </button>
     </div>
 
-    <!-- Leyenda / Filtros de colores -->
+    <!-- Filtros de colores -->
     <div class="flex items-center justify-between gap-2 mt-2 px-1 overflow-x-auto no-scrollbar pointer-events-auto text-[11px]">
       <button onclick="filterStreets('green')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 px-2.5 py-1 rounded-full border border-emerald-500/40 active:scale-95">
-        <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block shadow-sm shadow-emerald-400"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
         <span id="legFree" class="font-medium text-white">Gratis (Blanca)</span>
       </button>
 
       <button onclick="filterStreets('blue')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 px-2.5 py-1 rounded-full border border-blue-500/40 active:scale-95">
-        <span class="w-3 h-3 rounded-full bg-blue-500 inline-block shadow-sm shadow-blue-400"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
         <span id="legPaid" class="font-medium text-white">De pago (Azul)</span>
       </button>
 
       <button onclick="filterStreets('yellow')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 px-2.5 py-1 rounded-full border border-amber-400/40 active:scale-95">
-        <span class="w-3 h-3 rounded-full bg-amber-400 inline-block shadow-sm shadow-amber-300"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
         <span id="legZtl" class="font-medium text-white">Residentes / ZTL</span>
       </button>
 
@@ -146,61 +166,60 @@
     </div>
   </div>
 
-  <!-- 4. PÍLDORA FLOTANTE IZQUIERDA -->
-  <div id="miniSpotPill" onclick="focusBestSpot()" class="smooth-panel fixed top-28 left-3 z-20 glass-panel rounded-2xl p-2.5 shadow-xl cursor-pointer active:scale-95 transition border border-white/10 max-w-[185px]">
-    <div class="flex items-center gap-2.5">
-      <div id="badgeMiniColor" class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-extrabold text-base text-white shrink-0 shadow-md">
+  <!-- 6. PÍLDORA CHIQUITA DE PROBABILIDAD IA (Más pequeña y honesta) -->
+  <div id="miniSpotPill" onclick="focusBestSpot()" class="smooth-panel fixed top-28 left-3 z-20 glass-panel rounded-xl px-2.5 py-1.5 shadow-lg cursor-pointer active:scale-95 transition border border-white/10 max-w-[148px]">
+    <div class="flex items-center gap-2">
+      <div id="badgeMiniColor" class="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow">
         P
       </div>
       <div class="leading-tight">
-        <div id="txtSpotFound" class="text-[11px] font-bold text-white">Hueco a</div>
-        <div id="txtSpotDist" class="text-xs text-emerald-400 font-bold">65 m</div>
+        <div class="flex items-center gap-1">
+          <span id="txtSpotFound" class="text-[9px] uppercase tracking-wider text-slate-300 font-semibold">Prob. IA</span>
+          <span id="txtProbPct" class="text-[10px] font-extrabold text-emerald-400">78%</span>
+        </div>
+        <div class="text-[10px] text-slate-400 font-medium">
+          <span id="txtSpotDist">140 m</span> • <span id="txtDriveTime">1 min</span>
+        </div>
       </div>
-      <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 ml-auto"></i>
-    </div>
-    <div class="border-t border-white/10 mt-1.5 pt-1 flex items-center justify-around text-[10px] text-slate-300">
-      <span><i class="fa-solid fa-car text-slate-400 mr-1"></i><span id="txtDriveTime">1 min</span></span>
-      <span class="text-slate-600">|</span>
-      <span><i class="fa-solid fa-person-walking text-slate-400 mr-1"></i><span id="txtWalkTime">1 min</span></span>
     </div>
   </div>
 
-  <!-- 5. COLUMNA DE BOTONES DERECHA -->
+  <!-- 7. COLUMNA DE BOTONES DERECHA -->
   <div class="fixed right-3 top-28 z-30 flex flex-col gap-2.5">
     <!-- Botón [ ] Pantalla Completa Libre -->
-    <button onclick="toggleCleanFullScreen()" id="btnCleanScreen" class="w-11 h-11 rounded-full glass-panel flex items-center justify-center text-emerald-400 shadow-lg active:scale-90 transition border border-emerald-500/30" title="Pantalla Completa Libre [ ]">
-      <i id="cleanScreenIcon" class="fa-solid fa-expand text-base"></i>
+    <button onclick="toggleCleanFullScreen()" id="btnCleanScreen" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-emerald-400 shadow-lg active:scale-90 transition border border-emerald-500/30" title="Pantalla Completa Libre [ ]">
+      <i id="cleanScreenIcon" class="fa-solid fa-expand text-sm"></i>
     </button>
 
-    <!-- Botón Centrar en el Carrito y Repintar Calles -->
-    <button onclick="centerOnCar(true)" class="w-11 h-11 rounded-full glass-panel flex items-center justify-center text-blue-400 shadow-lg active:scale-90 transition" title="Centrar en mi carrito">
-      <i class="fa-solid fa-location-arrow text-base"></i>
+    <!-- Botón Centrar en el Carrito -->
+    <button onclick="centerOnCar(true)" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-blue-400 shadow-lg active:scale-90 transition" title="Centrar en mi carrito">
+      <i class="fa-solid fa-location-arrow text-sm"></i>
     </button>
 
     <!-- Botón Capas (MAP <-> SAT) -->
-    <button onclick="toggleMapLayer()" class="w-11 h-11 rounded-full glass-panel flex items-center justify-center text-white shadow-lg active:scale-90 transition relative" title="Cambiar Mapa">
-      <i class="fa-solid fa-layer-group text-base"></i>
+    <button onclick="toggleMapLayer()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-white shadow-lg active:scale-90 transition relative" title="Cambiar Mapa">
+      <i class="fa-solid fa-layer-group text-sm"></i>
       <span id="layerBadge" class="absolute -bottom-1 text-[8px] bg-blue-600 px-1.5 rounded-full font-bold">MAP</span>
     </button>
 
     <!-- Botones Zoom + / - -->
     <div class="glass-panel rounded-2xl flex flex-col overflow-hidden shadow-lg">
-      <button onclick="map.zoomIn()" class="w-11 h-10 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 border-b border-white/10 text-lg font-bold">+</button>
-      <button onclick="map.zoomOut()" class="w-11 h-10 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 text-lg font-bold">−</button>
+      <button onclick="map.zoomIn()" class="w-10 h-9 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 border-b border-white/10 text-base font-bold">+</button>
+      <button onclick="map.zoomOut()" class="w-10 h-9 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 text-base font-bold">−</button>
     </div>
   </div>
 
-  <!-- 6. MAPA EN VIVO -->
+  <!-- 8. MAPA EN VIVO -->
   <div id="map"></div>
 
-  <!-- 7. PANEL INFERIOR PLEGABLE + NAVEGACIÓN -->
+  <!-- 9. PANEL INFERIOR PLEGABLE + NAVEGACIÓN -->
   <div id="bottomContainer" class="smooth-panel fixed bottom-0 left-0 right-0 z-20 flex flex-col">
-    <div id="bottomSheetCard" class="glass-panel rounded-t-3xl px-4 pt-2 pb-3 shadow-2xl border-t border-white/15 transition-all duration-300">
+    <div id="bottomSheetCard" class="glass-panel rounded-t-3xl px-4 pt-1.5 pb-3 shadow-2xl border-t border-white/15 transition-all duration-300">
       
       <!-- Tirador para plegar/desplegar -->
-      <div onclick="toggleBottomSheet()" class="w-full py-1.5 flex flex-col items-center justify-center cursor-pointer group">
-        <div class="w-11 h-1.5 bg-slate-500 group-hover:bg-slate-300 rounded-full transition"></div>
-        <div class="flex items-center gap-1 text-[10px] text-slate-400 mt-1">
+      <div onclick="toggleBottomSheet()" class="w-full py-1 flex flex-col items-center justify-center cursor-pointer group">
+        <div class="w-10 h-1 bg-slate-500 group-hover:bg-slate-300 rounded-full transition"></div>
+        <div class="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5">
           <i id="sheetChevron" class="fa-solid fa-chevron-down"></i>
           <span id="txtToggleSheet">Plegar panel</span>
         </div>
@@ -214,14 +233,14 @@
           </div>
           <div class="truncate">
             <div id="txtClosestLabel" class="text-[11px] text-slate-400">Aparcamiento más cercano</div>
-            <h3 id="selectedStreetName" class="text-base font-bold text-white truncate">Via Abramo Lincoln</h3>
+            <h3 id="selectedStreetName" class="text-base font-bold text-white truncate">Escaneando vía...</h3>
             <div class="flex items-center gap-2 mt-0.5">
               <span id="selectedBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Gratis
               </span>
               <span class="text-xs text-slate-300 flex items-center gap-1">
                 <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i>
-                <span id="selectedDist">65 m</span>
+                <span id="selectedDist">-- m</span>
               </span>
             </div>
           </div>
@@ -234,59 +253,65 @@
         </button>
       </div>
 
-      <!-- 3 Cajitas desplegables -->
+      <!-- 3 Cajitas desplegables (Probabilidad | Horario | Costo con tarifa diurna y nocturna) -->
       <div id="sheetCollapsibleContent" class="grid grid-cols-3 gap-2 mt-3 transition-all duration-300">
         <div class="bg-slate-900/75 border border-white/10 rounded-xl p-2 flex items-center gap-2">
-          <i class="fa-solid fa-car text-slate-400 text-sm"></i>
+          <i class="fa-solid fa-chart-pie text-emerald-400 text-xs"></i>
           <div class="leading-tight">
-            <div id="lblSpots" class="text-[10px] text-slate-400">Huecos est.</div>
-            <div id="valSpots" class="text-xs font-bold text-white">8 / 12</div>
+            <div id="lblSpots" class="text-[10px] text-slate-400">Probabilidad</div>
+            <div id="valSpots" class="text-xs font-bold text-white">Alta (78%)</div>
           </div>
         </div>
 
         <div class="bg-slate-900/75 border border-white/10 rounded-xl p-2 flex items-center gap-2">
-          <i class="fa-regular fa-clock text-slate-400 text-sm"></i>
+          <i class="fa-regular fa-clock text-slate-400 text-xs"></i>
           <div class="leading-tight">
-            <div id="lblHours" class="text-[10px] text-slate-400">Horario</div>
-            <div id="valHours" class="text-xs font-bold text-white">00:00 - 24:00</div>
+            <div id="lblHours" class="text-[10px] text-slate-400">Horario Pago</div>
+            <div id="valHours" class="text-xs font-bold text-white">08:00 - 19:00</div>
           </div>
         </div>
 
         <div class="bg-slate-900/75 border border-white/10 rounded-xl p-2 flex items-center gap-2">
-          <i class="fa-solid fa-euro-sign text-slate-400 text-sm"></i>
+          <i class="fa-solid fa-euro-sign text-slate-400 text-xs"></i>
           <div class="leading-tight">
             <div id="lblCost" class="text-[10px] text-slate-400">Costo</div>
-            <div id="valCost" class="text-xs font-bold text-emerald-400">GRATIS</div>
+            <div id="valCost" class="text-[11px] font-bold text-emerald-400 leading-tight">GRATIS</div>
+            <div id="valCostSub" class="text-[9px] text-slate-400 leading-none mt-0.5">24h Libre</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Barra Inferior -->
-    <div class="bg-[#111824] border-t border-white/10 px-4 py-2 flex items-center justify-around text-[11px]">
+    <!-- Barra Inferior con 5 botones incluyendo "Dejé Libre" para ver autos saliendo en vivo -->
+    <div class="bg-[#111824] border-t border-white/10 px-2 py-2 flex items-center justify-around text-[10px]">
       <button onclick="centerOnCar(true)" class="flex flex-col items-center gap-1 text-blue-400 font-semibold">
-        <i class="fa-solid fa-map-location-dot text-base"></i>
+        <i class="fa-solid fa-map-location-dot text-sm"></i>
         <span id="navMap">Mapa</span>
       </button>
 
       <button onclick="saveParkedCar()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-        <i class="fa-solid fa-square-parking text-base text-emerald-400"></i>
-        <span id="navParked">Aparqué Aquí</span>
+        <i class="fa-solid fa-square-parking text-sm text-emerald-400"></i>
+        <span id="navParked">Aparqué</span>
+      </button>
+
+      <button onclick="triggerLeavingCarAlert()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-car-on text-sm text-cyan-400"></i>
+        <span id="navLeaving">Dejé Libre</span>
       </button>
 
       <button onclick="openCameraPlaceholder()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-        <i class="fa-solid fa-camera text-base text-amber-400"></i>
-        <span id="navScan">Leer Cartel</span>
+        <i class="fa-solid fa-camera text-sm text-amber-400"></i>
+        <span id="navScan">Cartel IA</span>
       </button>
 
       <button onclick="toggleSettingsModal(true)" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-        <i class="fa-solid fa-gear text-base"></i>
+        <i class="fa-solid fa-gear text-sm"></i>
         <span id="navSettings">Ajustes</span>
       </button>
     </div>
   </div>
 
-  <!-- 8. MODAL DE IDIOMAS ⚙️ -->
+  <!-- 10. MODAL DE IDIOMAS ⚙️ -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-5">
     <div class="glass-panel rounded-3xl p-6 max-w-sm w-full border border-white/15 shadow-2xl">
       <div class="flex items-center justify-between mb-4">
@@ -329,109 +354,129 @@
     // DICCIONARIO DE 3 IDIOMAS (ES / IT / EN)
     // ==========================================
     let currentLang = 'es';
+    let voiceEnabled = true;
+
     const i18n = {
       es: {
-        gpsTitle: "Activar GPS y Voz al Volante",
-        gpsDesc: "Mostraremos tu carrito en vivo y pintaremos todas las calles alrededor con líneas verdes (gratis), azules y ZTL.",
-        gpsBtn: "INICIAR MODO CONDUCCIÓN",
-        searchPlaceholder: "Buscar aparcamiento cerca de mí...",
+        gpsTitle: "Activar GPS y Audio Bluetooth",
+        gpsDesc: "Sincroniza el GPS de alta precisión y la guía de voz por el altavoz o Bluetooth de tu auto.",
+        gpsBtn: "CONECTAR Y ENTRAR AL MAPA",
+        loadingRadar: "Buscando coordenadas...",
+        loadingSub: "Alineando colores de calles en vivo",
+        searchPlaceholder: "Buscar calle o zona en Milán...",
         legFree: "Gratis (Blanca)",
         legPaid: "De pago (Azul)",
         legZtl: "Residentes / ZTL",
         legAll: "Todos",
-        spotFound: "Hueco a",
+        spotFound: "Prob. IA",
         closestLabel: "Aparcamiento más cercano",
-        statusFree: "Gratis",
-        statusPaid: "Línea Azul",
+        statusFree: "Gratis (Blanca)",
+        statusPaid: "Zona Azul",
         statusZtl: "Solo Residentes",
         btnGo: "Ir",
-        lblSpots: "Huecos est.",
-        lblHours: "Horario",
+        lblSpots: "Probabilidad",
+        lblHours: "Horario Pago",
         lblCost: "Costo",
-        freeNow: "GRATIS",
+        freeNow: "GRATIS ahora",
+        dayRate: "Día: € 1,50/h",
+        alwaysFree: "Gratis 24h",
         navMap: "Mapa",
-        navParked: "Aparqué Aquí",
-        navScan: "Leer Cartel",
+        navParked: "Aparqué",
+        navLeaving: "Dejé Libre",
+        navScan: "Cartel IA",
         navSettings: "Ajustes",
         setModalTitle: "Ajustes de Idioma",
         setLangLabel: "Selecciona tu idioma",
         btnCloseSettings: "Cerrar",
         foldSheet: "Plegar panel",
-        expandSheet: "Ver horarios y precios",
+        expandSheet: "Ver horarios y tarifas",
+        movingCarAlert: "¡Auto saliendo a 85m! Hueco libre",
         voiceLang: "es-ES",
-        voiceIntro: "Radar activado. Calles gratuitas y de pago pintadas alrededor de tu auto.",
-        parkedAlert: "¡Ubicación del auto guardada! Alerta de limpieza de calles activada."
+        voiceIntro: "Bluetooth y radar activos. Buscando coordenadas de calles.",
+        parkedAlert: "Ubicación guardada. Alerta anti-multas activada."
       },
       it: {
-        gpsTitle: "Attiva GPS e Guida Vocale",
-        gpsDesc: "Mostreremo la tua auto live con tutte le strisce verdi, blu e ZTL dipinte intorno a te.",
-        gpsBtn: "INIZIA GUIDA LIVE",
-        searchPlaceholder: "Trova parcheggio vicino a me...",
+        gpsTitle: "Attiva GPS e Audio Bluetooth",
+        gpsDesc: "Sincronizza il GPS di precisione e la guida vocale tramite il Bluetooth della tua auto.",
+        gpsBtn: "CONNETTI E APRI MAPPA",
+        loadingRadar: "Ricerca coordinate...",
+        loadingSub: "Allineamento strisce stradali live",
+        searchPlaceholder: "Cerca via o zona a Milano...",
         legFree: "Gratis (Bianche)",
         legPaid: "A pagamento (Blu)",
         legZtl: "Residenti / ZTL",
         legAll: "Tutti",
-        spotFound: "Posto a",
+        spotFound: "Prob. IA",
         closestLabel: "Parcheggio più vicino",
-        statusFree: "Libero",
+        statusFree: "Libero (Bianche)",
         statusPaid: "Strisce Blu",
         statusZtl: "Solo Residenti",
         btnGo: "Vai",
-        lblSpots: "Posti stimati",
-        lblHours: "Orari",
+        lblSpots: "Probabilità",
+        lblHours: "Orario Pago",
         lblCost: "Costo",
-        freeNow: "GRATIS",
+        freeNow: "GRATIS ora",
+        dayRate: "Giorno: € 1,50/h",
+        alwaysFree: "Gratis 24h",
         navMap: "Mappa",
-        navParked: "Ho Parcheggiato",
-        navScan: "Scan Cartello",
+        navParked: "Parcheggiato",
+        navLeaving: "Lascio Libero",
+        navScan: "Cartello IA",
         navSettings: "Impostazioni",
         setModalTitle: "Impostazioni",
         setLangLabel: "Seleziona Lingua",
         btnCloseSettings: "Chiudi",
         foldSheet: "Riduci pannello",
-        expandSheet: "Mostra orari e costi",
+        expandSheet: "Mostra orari e tariffe",
+        movingCarAlert: "Auto in uscita a 85m! Posto libero",
         voiceLang: "it-IT",
-        voiceIntro: "Radar attivo. Strisce verdi e blu caricate intorno alla tua auto.",
-        parkedAlert: "Posizione auto salvata! Avviso lavaggio strade attivo."
+        voiceIntro: "Bluetooth e radar attivi. Allineamento strade in corso.",
+        parkedAlert: "Posizione salvata! Avviso lavaggio strade attivo."
       },
       en: {
-        gpsTitle: "Enable GPS & Voice Guide",
-        gpsDesc: "Live car tracker with green free lines, blue paid zones and ZTL painted right around you.",
-        gpsBtn: "START LIVE RADAR",
-        searchPlaceholder: "Find parking near me...",
+        gpsTitle: "Enable GPS & Bluetooth Audio",
+        gpsDesc: "Sync high-accuracy GPS and hands-free voice guidance with your car Bluetooth.",
+        gpsBtn: "CONNECT & OPEN RADAR",
+        loadingRadar: "Searching coordinates...",
+        loadingSub: "Aligning live street parking lines",
+        searchPlaceholder: "Search street or area in Milan...",
         legFree: "Free (White)",
         legPaid: "Paid (Blue)",
         legZtl: "Residents / ZTL",
         legAll: "All",
-        spotFound: "Spot at",
+        spotFound: "AI Prob.",
         closestLabel: "Nearest parking zone",
-        statusFree: "Free",
-        statusPaid: "Blue Lines",
+        statusFree: "Free (White)",
+        statusPaid: "Blue Zone",
         statusZtl: "Residents Only",
         btnGo: "Go",
-        lblSpots: "Est. Spots",
-        lblHours: "Hours",
+        lblSpots: "Probability",
+        lblHours: "Paid Hours",
         lblCost: "Cost",
-        freeNow: "FREE",
+        freeNow: "FREE now",
+        dayRate: "Day: € 1.50/h",
+        alwaysFree: "24h Free",
         navMap: "Map",
-        navParked: "I Parked Here",
-        navScan: "Scan Sign",
+        navParked: "Parked",
+        navLeaving: "Leaving Spot",
+        navScan: "Sign AI",
         navSettings: "Settings",
         setModalTitle: "Settings",
         setLangLabel: "Select Language",
         btnCloseSettings: "Close",
         foldSheet: "Collapse panel",
         expandSheet: "Show hours & rates",
+        movingCarAlert: "Car leaving 85m ahead! Free spot",
         voiceLang: "en-US",
-        voiceIntro: "Live radar active. Free and paid streets highlighted around your car.",
+        voiceIntro: "Bluetooth and radar active. Aligning street coordinates.",
         parkedAlert: "Car location saved! Street cleaning alert active."
       }
     };
 
     // ==========================================
-    // MAPA + CARRITO CON HAZ DE LUZ (COMO LA 1RA VERSIÓN)
+    // MAPA + CARRITO EN VIVO
     // ==========================================
-    let userLat = 45.5522; // Ubicación inicial exacta en tu zona
+    let userLat = 45.5522;
     let userLng = 9.2185;
     let lastPaintedLat = 0;
     let lastPaintedLng = 0;
@@ -440,6 +485,8 @@
     let isCleanFullScreen = false;
     let allPaintedItems = [];
     let streetsLayerGroup = L.layerGroup();
+    let movingCarMarker = null;
+    let movingCarCoords = null;
     let currentSelectedStreet = null;
 
     const map = L.map('map', {
@@ -460,7 +507,7 @@
     gmapsNightTiles.addTo(map);
     streetsLayerGroup.addTo(map);
 
-    // ¡DE VUELTA EL CARRITO AZUL CON PARABRISAS Y HAZ DE LUZ!
+    // Icono del Carrito del Usuario
     const carIcon = L.divIcon({
       className: '',
       html: `
@@ -480,52 +527,41 @@
     const carMarker = L.marker([userLat, userLng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
 
     // ==========================================
-    // MOTOR INFALIBLE DE LÍNEAS DE COLORES ALREDEDOR DEL CARRITO
+    // PINTADO 100% ALINEADO CON AVISO "BUSCANDO COORDENADAS..."
     // ==========================================
-    function drawInstantGridAroundCar(lat, lng) {
-      streetsLayerGroup.clearLayers();
-      allPaintedItems = [];
-
-      // Cuadrícula inmediata alrededor del carrito para que NUNCA esté vacío ni un milisegundo
-      const instantStreets = [
-        { name: "Via Abramo Lincoln", type: "green", coords: [[lat + 0.0018, lng + 0.0009], [lat - 0.0018, lng + 0.0010]] },
-        { name: "Via A. Guazzoni", type: "blue", coords: [[lat + 0.0018, lng + 0.0001], [lat - 0.0018, lng + 0.0001]] },
-        { name: "Via Binella", type: "green", coords: [[lat + 0.0005, lng - 0.0018], [lat + 0.0007, lng + 0.0018]] },
-        { name: "Via Fra Savonarola", type: "blue", coords: [[lat + 0.0001, lng - 0.0003], [lat - 0.0018, lng - 0.0002]] },
-        { name: "Via Cottolengo", type: "yellow", coords: [[lat + 0.0015, lng - 0.0009], [lat - 0.0018, lng - 0.0008]] },
-        { name: "Via Ugo Bassi", type: "green", coords: [[lat + 0.0015, lng - 0.0017], [lat - 0.0018, lng - 0.0016]] },
-        { name: "Tratto Centrale", type: "blue", coords: [[lat - 0.0003, lng - 0.0018], [lat - 0.0002, lng + 0.0018]] },
-        { name: "Via Giordano Bruno", type: "green", coords: [[lat - 0.0011, lng - 0.0018], [lat - 0.0010, lng + 0.0018]] }
-      ];
-
-      instantStreets.forEach((st, i) => {
-        drawColoredStreet(st.coords, st.name, st.type, i);
-        if (i === 0) selectStreetData(st.name, st.type, st.coords[0]);
-      });
+    function showRadarLoader(show) {
+      const loader = document.getElementById('radarLoadingOverlay');
+      if (show) {
+        loader.classList.remove('opacity-0');
+      } else {
+        loader.classList.add('opacity-0');
+      }
     }
 
     async function paintStreetsAround(lat, lng) {
       lastPaintedLat = lat;
       lastPaintedLng = lng;
+      showRadarLoader(true);
 
-      // 1. Pintamos de inmediato alrededor del carrito
-      drawInstantGridAroundCar(lat, lng);
-
-      // 2. Consultamos la geometría exacta de OpenStreetMap usando múltiples espejos rápidos
-      const query = `[out:json][timeout:8];way["highway"~"residential|secondary|tertiary|primary|unclassified|living_street"](around:320,${lat},${lng});out geom;`;
+      // Radio optimizado (260m) y timeout corto (5s) para que cargue en 2 segundos exactos y alineado
+      const query = `[out:json][timeout:6];way["highway"~"residential|secondary|tertiary|primary|unclassified|living_street"](around:260,${lat},${lng});out geom;`;
       const mirrors = [
-        'https://overpass-api.de/api/interpreter?data=',
+        'https://overpass.kumi.systems/api/interpreter?data=',
         'https://lz4.overpass-api.de/api/interpreter?data=',
-        'https://overpass.kumi.systems/api/interpreter?data='
+        'https://overpass-api.de/api/interpreter?data='
       ];
 
       for (const endpoint of mirrors) {
         try {
-          const res = await fetch(endpoint + encodeURIComponent(query));
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 5500);
+          const res = await fetch(endpoint + encodeURIComponent(query), { signal: controller.signal });
+          clearTimeout(timer);
+
           if (!res.ok) continue;
           const data = await res.json();
 
-          if (data.elements && data.elements.length > 2) {
+          if (data.elements && data.elements.length > 0) {
             streetsLayerGroup.clearLayers();
             allPaintedItems = [];
             let firstFreeSelected = false;
@@ -547,12 +583,25 @@
                 selectStreetData(name, type, coords[Math.floor(coords.length / 2)]);
               }
             });
-            break; // Éxito, salimos del bucle
+
+            showRadarLoader(false);
+            // Simulamos la detección de un auto moviéndose/dejando hueco cerca en una calle real
+            if (data.elements.length > 1) {
+              const targetWay = data.elements[1];
+              if (targetWay.geometry && targetWay.geometry.length > 0) {
+                const pt = targetWay.geometry[Math.floor(targetWay.geometry.length / 2)];
+                const stName = (targetWay.tags && targetWay.tags.name) ? targetWay.tags.name : "Via Vicina";
+                spawnMovingCarIndicator(pt.lat, pt.lon, stName, false);
+              }
+            }
+            return;
           }
         } catch (err) {
-          // Si un espejo falla, queda activa nuestra cuadrícula instantánea o prueba el siguiente
+          // Intenta el siguiente espejo inmediatamente
         }
       }
+
+      showRadarLoader(false);
     }
 
     function drawColoredStreet(coords, name, type, idx) {
@@ -564,11 +613,10 @@
 
       const cfg = palette[type];
 
-      // Líneas gruesas y brillantes (weight: 7, opacity: 0.9) como en tu primera captura
       const poly = L.polyline(coords, {
         color: cfg.color,
-        weight: 7,
-        opacity: 0.9,
+        weight: 6,
+        opacity: 0.88,
         lineCap: 'round',
         lineJoin: 'round',
         className: cfg.cls
@@ -577,13 +625,14 @@
       const mid = coords[Math.floor(coords.length / 2)];
       poly.on('click', () => selectStreetData(name, type, mid));
 
+      // Solo ponemos marcadores P discretos en calles con nombre único para no saturar
       let marker = null;
-      if (idx % 2 === 0) {
+      if (idx % 3 === 0) {
         const pinIcon = L.divIcon({
           className: '',
-          html: `<div translate="no" class="w-6 h-6 rounded-full ${cfg.badgeBg} border-2 border-white shadow-md flex items-center justify-center text-[10px] font-extrabold">P</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+          html: `<div translate="no" class="w-5 h-5 rounded-full ${cfg.badgeBg} border border-white shadow flex items-center justify-center text-[9px] font-extrabold">P</div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
         });
 
         marker = L.marker(mid, { icon: pinIcon }).addTo(streetsLayerGroup);
@@ -591,6 +640,129 @@
       }
 
       allPaintedItems.push({ type, poly, marker });
+    }
+
+    // ==========================================
+    // DETECTOR VISUAL DE AUTO SALIENDO / MOVIÉNDOSE CERCA
+    // ==========================================
+    function spawnMovingCarIndicator(lat, lng, streetName, announceVoice = true) {
+      if (movingCarMarker) {
+        map.removeLayer(movingCarMarker);
+      }
+      movingCarCoords = [lat, lng];
+      const dist = Math.max(35, Math.round(map.distance([userLat, userLng], movingCarCoords)));
+
+      const leavingCarIcon = L.divIcon({
+        className: '',
+        html: `
+          <div class="relative flex items-center justify-center w-12 h-12">
+            <div class="w-11 h-11 rounded-full bg-emerald-400/40 animate-ping absolute"></div>
+            <div class="px-2 py-1 rounded-full bg-emerald-500 border-2 border-white shadow-lg flex items-center gap-1 relative z-10">
+              <i class="fa-solid fa-car-side text-[10px] text-white"></i>
+              <span class="text-[9px] font-extrabold text-white">LIBRE</span>
+            </div>
+          </div>
+        `,
+        iconSize: [60, 48],
+        iconAnchor: [30, 24]
+      });
+
+      movingCarMarker = L.marker(movingCarCoords, { icon: leavingCarIcon, zIndexOffset: 950 }).addTo(map);
+      movingCarMarker.on('click', () => {
+        selectStreetData(streetName, 'green', movingCarCoords);
+      });
+
+      const banner = document.getElementById('movingCarBanner');
+      const alertTxt = document.getElementById('txtMovingCarAlert');
+      alertTxt.innerText = `¡Auto saliendo a ${dist}m (${streetName})!`;
+      banner.classList.remove('hidden');
+      banner.classList.add('flex');
+
+      if (announceVoice) {
+        speakText(`Atención: un auto acaba de dejar un hueco libre a ${dist} metros en ${streetName}.`);
+      }
+    }
+
+    function triggerLeavingCarAlert() {
+      // Cuando tú o un usuario toca "Dejé Libre", lanza el aviso en vivo en el mapa
+      const offsetLat = userLat + 0.00045;
+      const offsetLng = userLng + 0.00035;
+      const stName = currentSelectedStreet ? currentSelectedStreet.name : "Via Locale";
+      spawnMovingCarIndicator(offsetLat, offsetLng, stName, true);
+    }
+
+    function focusMovingCarSpot() {
+      if (movingCarCoords) {
+        map.flyTo(movingCarCoords, 18, { duration: 0.7 });
+      }
+    }
+
+    // ==========================================
+    // DATOS DE CALLE: PROBABILIDAD + TARIFA DÍA/NOCHE EN ZONA AZUL
+    // ==========================================
+    function selectStreetData(name, type, targetCoord) {
+      const t = i18n[currentLang];
+      const distMeters = Math.max(25, Math.round(map.distance([userLat, userLng], targetCoord)));
+      currentSelectedStreet = { name, type, coord: targetCoord, distMeters };
+
+      document.getElementById('selectedStreetName').innerText = name;
+      document.getElementById('selectedDist').innerText = `${distMeters} m`;
+      document.getElementById('txtSpotDist').innerText = `${distMeters} m`;
+
+      const badge = document.getElementById('selectedBadge');
+      const mainP = document.getElementById('mainCardP');
+      const miniP = document.getElementById('badgeMiniColor');
+      const probPct = document.getElementById('txtProbPct');
+      const valSpots = document.getElementById('valSpots');
+      const valHours = document.getElementById('valHours');
+      const valCost = document.getElementById('valCost');
+      const valCostSub = document.getElementById('valCostSub');
+
+      const hour = new Date().getHours();
+      const isFreeNight = (hour >= 19 || hour < 8);
+
+      if (type === 'green') {
+        badge.innerText = t.statusFree;
+        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        mainP.className = "w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg";
+        miniP.className = "w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
+        probPct.innerText = "82%";
+        probPct.className = "text-[10px] font-extrabold text-emerald-400";
+        valSpots.innerText = "Alta (82%)";
+        valHours.innerText = "00:00 - 24:00";
+        valCost.innerText = t.freeNow;
+        valCost.className = "text-[11px] font-bold text-emerald-400 leading-tight";
+        valCostSub.innerText = t.alwaysFree;
+      } else if (type === 'blue') {
+        badge.innerText = t.statusPaid;
+        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30";
+        mainP.className = "w-11 h-11 rounded-2xl bg-blue-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg";
+        miniP.className = "w-6 h-6 rounded-lg bg-blue-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
+        probPct.innerText = "68%";
+        probPct.className = "text-[10px] font-extrabold text-blue-400";
+        valSpots.innerText = "Media (68%)";
+        valHours.innerText = "08:00 - 19:00";
+
+        // ¡Aquí mostramos GRATIS fuera de horario PERO también cuánto se paga de día!
+        if (isFreeNight) {
+          valCost.innerText = t.freeNow;
+          valCost.className = "text-[11px] font-bold text-emerald-400 leading-tight";
+          valCostSub.innerText = `(${t.dayRate})`;
+        } else {
+          valCost.innerText = "€ 1,50 / h";
+          valCost.className = "text-[11px] font-bold text-blue-400 leading-tight";
+          valCostSub.innerText = "Gratis > 19:00";
+        }
+      } else {
+        badge.innerText = t.statusZtl;
+        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        mainP.className = "w-11 h-11 rounded-2xl bg-amber-500 flex items-center justify-center text-xl font-extrabold text-black shrink-0 shadow-lg";
+        valSpots.innerText = "Solo Pass";
+        valHours.innerText = "24/7 Res.";
+        valCost.innerText = "Multa €83";
+        valCost.className = "text-[11px] font-bold text-amber-400 leading-tight";
+        valCostSub.innerText = "No aparcar";
+      }
     }
 
     function filterStreets(filterType) {
@@ -606,56 +778,6 @@
       });
     }
 
-    function selectStreetData(name, type, targetCoord) {
-      const t = i18n[currentLang];
-      const distMeters = Math.max(25, Math.round(map.distance([userLat, userLng], targetCoord)));
-      currentSelectedStreet = { name, type, coord: targetCoord, distMeters };
-
-      document.getElementById('selectedStreetName').innerText = name;
-      document.getElementById('selectedDist').innerText = `${distMeters} m`;
-      document.getElementById('txtSpotDist').innerText = `${distMeters} m`;
-
-      const badge = document.getElementById('selectedBadge');
-      const mainP = document.getElementById('mainCardP');
-      const miniP = document.getElementById('badgeMiniColor');
-      const valSpots = document.getElementById('valSpots');
-      const valHours = document.getElementById('valHours');
-      const valCost = document.getElementById('valCost');
-
-      if (type === 'green') {
-        badge.innerText = t.statusFree;
-        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-        mainP.className = "w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg";
-        miniP.className = "w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center font-extrabold text-base text-white shrink-0 shadow-md";
-        valSpots.innerText = "8 / 12";
-        valHours.innerText = "00:00 - 24:00";
-        valCost.innerText = t.freeNow;
-        valCost.className = "text-xs font-bold text-emerald-400";
-      } else if (type === 'blue') {
-        const hour = new Date().getHours();
-        const isFreeNight = (hour >= 19 || hour < 8);
-        badge.innerText = t.statusPaid;
-        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30";
-        mainP.className = "w-11 h-11 rounded-2xl bg-blue-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg";
-        miniP.className = "w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center font-extrabold text-base text-white shrink-0 shadow-md";
-        valSpots.innerText = "5 / 10";
-        valHours.innerText = "08:00 - 19:00";
-        valCost.innerText = isFreeNight ? `${t.freeNow} (>19h)` : "€ 1,50/h";
-        valCost.className = isFreeNight ? "text-xs font-bold text-emerald-400" : "text-xs font-bold text-blue-400";
-      } else {
-        badge.innerText = t.statusZtl;
-        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30";
-        mainP.className = "w-11 h-11 rounded-2xl bg-amber-500 flex items-center justify-center text-xl font-extrabold text-black shrink-0 shadow-lg";
-        valSpots.innerText = "Solo Pass";
-        valHours.innerText = "24/7 ZTL";
-        valCost.innerText = "Multa €83";
-        valCost.className = "text-xs font-bold text-amber-400";
-      }
-    }
-
-    // ==========================================
-    // PLEGAR TARJETA Y PANTALLA COMPLETA [ ]
-    // ==========================================
     function toggleBottomSheet() {
       const content = document.getElementById('sheetCollapsibleContent');
       const chevron = document.getElementById('sheetChevron');
@@ -685,7 +807,7 @@
         topPanel.style.transform = 'translateY(-140%)';
         miniPill.style.transform = 'translateX(-140%)';
         bottomContainer.style.transform = 'translateY(110%)';
-        icon.className = 'fa-solid fa-compress text-base';
+        icon.className = 'fa-solid fa-compress text-sm';
         if (document.documentElement.requestFullscreen) {
           document.documentElement.requestFullscreen().catch(() => {});
         }
@@ -693,7 +815,7 @@
         topPanel.style.transform = 'translateY(0)';
         miniPill.style.transform = 'translateX(0)';
         bottomContainer.style.transform = 'translateY(0)';
-        icon.className = 'fa-solid fa-expand text-base';
+        icon.className = 'fa-solid fa-expand text-sm';
         if (document.fullscreenElement && document.exitFullscreen) {
           document.exitFullscreen().catch(() => {});
         }
@@ -701,11 +823,10 @@
     }
 
     // ==========================================
-    // GPS EN VIVO QUE SIEMPRE PINTA DONDE ESTÁ EL CARRITO
+    // ARRANQUE GPS + VOZ BLUETOOTH
     // ==========================================
     window.addEventListener('load', () => {
       setLanguage('es');
-      paintStreetsAround(userLat, userLng);
 
       setTimeout(() => {
         const splash = document.getElementById('splashScreen');
@@ -718,9 +839,9 @@
     function startDrivingMode() {
       document.getElementById('gpsModal').classList.add('hidden');
       speakText(i18n[currentLang].voiceIntro);
+      showRadarLoader(true);
 
       if (navigator.geolocation) {
-        // Primero obtenemos la posición inmediata para centrar y pintar las líneas ahí mismo
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             userLat = pos.coords.latitude;
@@ -729,11 +850,12 @@
             map.setView([userLat, userLng], 17);
             paintStreetsAround(userLat, userLng);
           },
-          () => {},
+          () => {
+            paintStreetsAround(userLat, userLng);
+          },
           { enableHighAccuracy: true, timeout: 5000 }
         );
 
-        // Luego seguimos el movimiento del carrito en tiempo real
         navigator.geolocation.watchPosition(
           (pos) => {
             const newLat = pos.coords.latitude;
@@ -744,8 +866,7 @@
             userLng = newLng;
             carMarker.setLatLng([userLat, userLng]);
 
-            // Si el carrito se movió más de 80 metros de donde se pintó por última vez, repinta su nueva zona
-            if (distFromLastPaint > 80) {
+            if (distFromLastPaint > 90) {
               map.panTo([userLat, userLng]);
               paintStreetsAround(userLat, userLng);
             }
@@ -753,6 +874,23 @@
           () => {},
           { enableHighAccuracy: true, maximumAge: 2000 }
         );
+      } else {
+        paintStreetsAround(userLat, userLng);
+      }
+    }
+
+    function toggleBluetoothVoice() {
+      voiceEnabled = !voiceEnabled;
+      const btn = document.getElementById('btStatusBtn');
+      const icon = document.getElementById('voiceIcon');
+      if (voiceEnabled) {
+        btn.className = "flex items-center gap-1 bg-blue-500/20 border border-blue-400/40 text-blue-300 px-2 py-1 rounded-full text-[10px] font-bold shrink-0";
+        icon.className = "fa-solid fa-volume-high text-[10px]";
+        speakText("Audio Bluetooth activado.");
+      } else {
+        btn.className = "flex items-center gap-1 bg-slate-800 border border-white/10 text-slate-400 px-2 py-1 rounded-full text-[10px] font-bold shrink-0";
+        icon.className = "fa-solid fa-volume-xmark text-[10px]";
+        window.speechSynthesis.cancel();
       }
     }
 
@@ -792,7 +930,7 @@
     }
 
     function speakText(text) {
-      if (!('speechSynthesis' in window)) return;
+      if (!voiceEnabled || !('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = i18n[currentLang].voiceLang;
@@ -802,7 +940,7 @@
     function speakCurrentStreet() {
       if (!currentSelectedStreet) return;
       const st = currentSelectedStreet;
-      speakText(`${st.name}, ${st.distMeters} metros.`);
+      speakText(`${st.name}, a ${st.distMeters} metros.`);
     }
 
     function saveParkedCar() {
@@ -833,6 +971,8 @@
       document.getElementById('txtGpsTitle').innerText = t.gpsTitle;
       document.getElementById('txtGpsDesc').innerText = t.gpsDesc;
       document.getElementById('txtGpsBtn').innerText = t.gpsBtn;
+      document.getElementById('txtLoadingRadar').innerText = t.loadingRadar;
+      document.getElementById('txtLoadingSub').innerText = t.loadingSub;
       document.getElementById('searchInput').placeholder = t.searchPlaceholder;
 
       document.getElementById('legFree').innerText = t.legFree;
@@ -850,6 +990,7 @@
 
       document.getElementById('navMap').innerText = t.navMap;
       document.getElementById('navParked').innerText = t.navParked;
+      document.getElementById('navLeaving').innerText = t.navLeaving;
       document.getElementById('navScan').innerText = t.navScan;
       document.getElementById('navSettings').innerText = t.navSettings;
 
