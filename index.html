@@ -35,7 +35,7 @@
       background: #172030;
     }
 
-    /* Azul Noche idéntico a Google Maps Móvil */
+    /* Estilo Azul Noche idéntico a Google Maps Móvil */
     .gmaps-night-tiles {
       filter: invert(92%) hue-rotate(195deg) saturate(150%) brightness(88%) contrast(108%);
     }
@@ -45,13 +45,12 @@
     }
 
     .glass-panel {
-      background: rgba(20, 28, 44, 0.94);
+      background: rgba(20, 28, 44, 0.95);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Resplandor de las líneas de aparcamiento */
     .street-line-green {
       filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.95));
     }
@@ -62,7 +61,6 @@
       filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.95));
     }
 
-    /* Haz de luz delantero del carrito */
     .car-beam {
       width: 68px;
       height: 68px;
@@ -100,7 +98,7 @@
       </div>
       <h2 id="txtGpsTitle" class="text-xl font-bold mb-2">Activar GPS y Audio Bluetooth</h2>
       <p id="txtGpsDesc" class="text-xs text-slate-300 mb-5 leading-relaxed">
-        Sincroniza el GPS de alta precisión y recibe alertas por voz manos libres cuando alguien deje un hueco libre cerca.
+        Sincroniza el radar de Milán y recibe alertas por voz manos libres cuando se libere un hueco cerca.
       </p>
       <button onclick="startDrivingMode()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 font-bold text-base shadow-lg shadow-blue-600/40 flex items-center justify-center gap-3 active:scale-95 transition">
         <i class="fa-solid fa-satellite-dish"></i>
@@ -109,12 +107,12 @@
     </div>
   </div>
 
-  <!-- 3. AVISO DE CARGA DE COORDENADAS -->
+  <!-- 3. AVISO DE CARGA ELEGANTE -->
   <div id="radarLoadingOverlay" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 glass-panel px-5 py-3.5 rounded-2xl border border-blue-400/40 shadow-2xl flex items-center gap-3 pointer-events-none opacity-0 transition-opacity duration-300">
     <i class="fa-solid fa-compass fa-spin text-blue-400 text-xl"></i>
     <div class="leading-tight">
-      <div id="txtLoadingRadar" class="text-xs font-bold text-white">Sincronizando calles...</div>
-      <div id="txtLoadingSub" class="text-[10px] text-slate-400">Pintando líneas azules y verdes</div>
+      <div id="txtLoadingRadar" class="text-xs font-bold text-white">Cargando radar de Milán...</div>
+      <div id="txtLoadingSub" class="text-[10px] text-slate-400">Pintando zonas de estacionamiento</div>
     </div>
   </div>
 
@@ -124,7 +122,6 @@
       <i class="fa-solid fa-location-dot text-emerald-400 text-sm"></i>
       <input id="searchInput" type="text" placeholder="Buscar calle o zona en Milán..." class="bg-transparent border-none outline-none text-xs text-white placeholder-slate-400 w-full" />
       
-      <!-- Botón de Estado Bluetooth Audio + Voz -->
       <button onclick="toggleBluetoothVoice()" id="btStatusBtn" class="flex items-center gap-1 bg-blue-500/20 border border-blue-400/40 text-blue-300 px-2 py-1 rounded-full text-[10px] font-bold shrink-0" title="Audio Bluetooth / Voz">
         <i class="fa-brands fa-bluetooth-b text-xs"></i>
         <i id="voiceIcon" class="fa-solid fa-volume-high text-[10px]"></i>
@@ -158,7 +155,7 @@
     </div>
   </div>
 
-  <!-- 5. PÍLDORA CHIQUITA DE PROBABILIDAD IA (Izquierda) -->
+  <!-- 5. PÍLDORA DE PROBABILIDAD IA -->
   <div id="miniSpotPill" onclick="focusBestSpot()" class="smooth-panel fixed top-28 left-3 z-20 glass-panel rounded-xl px-2.5 py-1.5 shadow-lg cursor-pointer active:scale-95 transition border border-white/10 max-w-[142px]">
     <div class="flex items-center gap-2">
       <div id="badgeMiniColor" class="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow">
@@ -170,41 +167,37 @@
           <span id="txtProbPct" class="text-[10px] font-extrabold text-emerald-400">82%</span>
         </div>
         <div class="text-[10px] text-slate-400 font-medium">
-          <span id="txtSpotDist">65 m</span> • <span id="txtDriveTime">1 min</span>
+          <span id="txtSpotDist">52 m</span> • <span id="txtDriveTime">1 min</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 6. ALERTA COMUNITARIA AUTOMÁTICA (Ubicada sin tapar el botón [ ]) -->
+  <!-- 6. ALERTA COMUNITARIA AUTOMÁTICA -->
   <div id="movingCarBanner" onclick="focusMovingCarSpot()" class="fixed top-[162px] left-3 right-16 z-20 glass-panel px-3 py-2 rounded-xl border border-emerald-400/70 shadow-2xl hidden items-center justify-between gap-2 cursor-pointer active:scale-95 transition">
     <div class="flex items-center gap-2 min-w-0">
       <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
       <i class="fa-solid fa-car-on text-emerald-400 text-xs shrink-0"></i>
-      <span id="txtMovingCarAlert" class="text-[11px] font-bold text-emerald-300 truncate">¡Dejé libre a 55m! Guiando...</span>
+      <span id="txtMovingCarAlert" class="text-[11px] font-bold text-emerald-300 truncate">¡Hueco libre cercano!</span>
     </div>
     <span class="text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-bold shrink-0">AUTO VOZ</span>
   </div>
 
   <!-- 7. COLUMNA DE BOTONES DERECHA -->
   <div class="fixed right-3 top-28 z-30 flex flex-col gap-2.5">
-    <!-- Botón [ ] Pantalla Completa Libre -->
     <button onclick="toggleCleanFullScreen()" id="btnCleanScreen" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-emerald-400 shadow-lg active:scale-90 transition border border-emerald-500/30" title="Pantalla Completa Libre [ ]">
       <i id="cleanScreenIcon" class="fa-solid fa-expand text-sm"></i>
     </button>
 
-    <!-- Botón Centrar en el Carrito -->
     <button onclick="centerOnCar(true)" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-blue-400 shadow-lg active:scale-90 transition" title="Centrar en mi carrito">
       <i class="fa-solid fa-location-arrow text-sm"></i>
     </button>
 
-    <!-- Botón Capas (MAP <-> SAT) -->
     <button onclick="toggleMapLayer()" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-white shadow-lg active:scale-90 transition relative" title="Cambiar Mapa">
       <i class="fa-solid fa-layer-group text-sm"></i>
       <span id="layerBadge" class="absolute -bottom-1 text-[8px] bg-blue-600 px-1.5 rounded-full font-bold">MAP</span>
     </button>
 
-    <!-- Botones Zoom + / - -->
     <div class="glass-panel rounded-2xl flex flex-col overflow-hidden shadow-lg">
       <button onclick="map.zoomIn()" class="w-10 h-9 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 border-b border-white/10 text-base font-bold">+</button>
       <button onclick="map.zoomOut()" class="w-10 h-9 flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 text-base font-bold">−</button>
@@ -218,7 +211,6 @@
   <div id="bottomContainer" class="smooth-panel fixed bottom-0 left-0 right-0 z-20 flex flex-col">
     <div id="bottomSheetCard" class="glass-panel rounded-t-3xl px-4 pt-1.5 pb-3 shadow-2xl border-t border-white/15 transition-all duration-300">
       
-      <!-- Tirador para plegar/desplegar -->
       <div onclick="toggleBottomSheet()" class="w-full py-1 flex flex-col items-center justify-center cursor-pointer group">
         <div class="w-10 h-1 bg-slate-500 group-hover:bg-slate-300 rounded-full transition"></div>
         <div class="flex items-center gap-1 text-[10px] text-slate-400 mt-0.5">
@@ -227,7 +219,6 @@
         </div>
       </div>
 
-      <!-- Calle seleccionada -->
       <div class="flex items-center justify-between gap-2 mt-1">
         <div class="flex items-center gap-3 min-w-0">
           <div id="mainCardP" class="w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg">
@@ -235,27 +226,25 @@
           </div>
           <div class="truncate">
             <div id="txtClosestLabel" class="text-[11px] text-slate-400">Aparcamiento más cercano</div>
-            <h3 id="selectedStreetName" class="text-base font-bold text-white truncate">Via Giordano Bruno</h3>
+            <h3 id="selectedStreetName" class="text-base font-bold text-white truncate">Via Fra Savonarola</h3>
             <div class="flex items-center gap-2 mt-0.5">
               <span id="selectedBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                 Gratis (Blanca)
               </span>
               <span class="text-xs text-slate-300 flex items-center gap-1">
                 <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i>
-                <span id="selectedDist">65 m</span>
+                <span id="selectedDist">52 m</span>
               </span>
             </div>
           </div>
         </div>
 
-        <!-- Botón Azul Ir -->
         <button onclick="navigateToSelected()" class="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 transition font-bold text-sm flex items-center gap-2 shadow-lg shadow-blue-600/40 shrink-0">
           <i class="fa-solid fa-diamond-turn-right"></i>
           <span id="btnGoText">Ir</span>
         </button>
       </div>
 
-      <!-- 3 Cajitas desplegables -->
       <div id="sheetCollapsibleContent" class="grid grid-cols-3 gap-2 mt-3 transition-all duration-300">
         <div class="bg-slate-900/75 border border-white/10 rounded-xl p-2 flex items-center gap-2">
           <i class="fa-solid fa-chart-pie text-emerald-400 text-xs"></i>
@@ -352,19 +341,16 @@
   </div>
 
   <script>
-    // ==========================================
-    // DICCIONARIO DE 3 IDIOMAS (ES / IT / EN)
-    // ==========================================
     let currentLang = 'es';
     let voiceEnabled = true;
 
     const i18n = {
       es: {
         gpsTitle: "Activar GPS y Audio Bluetooth",
-        gpsDesc: "Sincroniza el GPS de alta precisión y recibe alertas por voz manos libres cuando alguien deje un hueco libre cerca.",
+        gpsDesc: "Sincroniza el radar de Milán y recibe alertas por voz manos libres cuando se libere un hueco cerca.",
         gpsBtn: "CONECTAR Y ENTRAR AL MAPA",
-        loadingRadar: "Sincronizando calles...",
-        loadingSub: "Pintando líneas azules y verdes",
+        loadingRadar: "Cargando radar de Milán...",
+        loadingSub: "Pintando zonas de estacionamiento",
         searchPlaceholder: "Buscar calle o zona en Milán...",
         legFree: "Gratis (Blanca)",
         legPaid: "De pago (Azul)",
@@ -393,15 +379,15 @@
         foldSheet: "Plegar panel",
         expandSheet: "Ver horarios y tarifas",
         voiceLang: "es-ES",
-        voiceIntro: "Radar conectado. Líneas verdes y azules activas alrededor de tu auto.",
+        voiceIntro: "Radar conectado. Zonas de Milán activas.",
         parkedAlert: "Ubicación guardada. Alerta anti-multas activada."
       },
       it: {
         gpsTitle: "Attiva GPS e Audio Bluetooth",
-        gpsDesc: "Sincronizza il GPS e ricevi avvisi vocali automatici quando un'altra auto lascia un posto libero vicino a te.",
+        gpsDesc: "Sincronizza il radar di Milano e ricevi avvisi vocali quando si libera un posto vicino.",
         gpsBtn: "CONNETTI E APRI MAPPA",
-        loadingRadar: "Sincronizzazione vie...",
-        loadingSub: "Colorazione strisce blu e verdi",
+        loadingRadar: "Caricamento radar Milano...",
+        loadingSub: "Colorazione zone di sosta",
         searchPlaceholder: "Cerca via o zona a Milano...",
         legFree: "Gratis (Bianche)",
         legPaid: "A pagamento (Blu)",
@@ -430,15 +416,15 @@
         foldSheet: "Riduci pannello",
         expandSheet: "Mostra orari e tariffe",
         voiceLang: "it-IT",
-        voiceIntro: "Radar connesso. Strisce verdi e blu attive intorno alla tua auto.",
+        voiceIntro: "Radar connesso. Zone di Milano attive.",
         parkedAlert: "Posizione salvata! Avviso lavaggio strade attivo."
       },
       en: {
         gpsTitle: "Enable GPS & Bluetooth Audio",
-        gpsDesc: "Sync GPS and get automatic hands-free voice alerts when another driver leaves a free spot nearby.",
+        gpsDesc: "Sync Milan radar and get hands-free voice alerts when a spot opens nearby.",
         gpsBtn: "CONNECT & OPEN RADAR",
-        loadingRadar: "Syncing streets...",
-        loadingSub: "Painting blue and green parking lines",
+        loadingRadar: "Loading Milan radar...",
+        loadingSub: "Painting parking zones",
         searchPlaceholder: "Search street or area in Milan...",
         legFree: "Free (White)",
         legPaid: "Paid (Blue)",
@@ -467,18 +453,13 @@
         foldSheet: "Collapse panel",
         expandSheet: "Show hours & rates",
         voiceLang: "en-US",
-        voiceIntro: "Radar connected. Free and paid lines active around your car.",
+        voiceIntro: "Radar connected. Milan zones active.",
         parkedAlert: "Car location saved! Street cleaning alert active."
       }
     };
 
-    // ==========================================
-    // MAPA + CARRITO EN VIVO
-    // ==========================================
     let userLat = 45.5522;
     let userLng = 9.2185;
-    let lastPaintedLat = 0;
-    let lastPaintedLng = 0;
     let isNightVector = true;
     let isSheetCollapsed = false;
     let isCleanFullScreen = false;
@@ -526,96 +507,84 @@
 
     const carMarker = L.marker([userLat, userLng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
 
-    // ==========================================
-    // SISTEMA INFALIBLE DE LÍNEAS: CACHÉ LOCAL + OVERPASS 12s
-    // ==========================================
     function showRadarLoader(show) {
       const loader = document.getElementById('radarLoadingOverlay');
-      if (show) {
-        loader.classList.remove('opacity-0');
-      } else {
-        loader.classList.add('opacity-0');
+      if (loader) {
+        if (show) loader.classList.remove('opacity-0');
+        else loader.classList.add('opacity-0');
       }
     }
 
-    function renderElementsOnMap(elements) {
+    // BASE DE CALLES MAESTRA DE RESPALDO (Garantiza que NUNCA falle la carga visual)
+    function loadFallbackMilanGrid(lat, lng) {
       streetsLayerGroup.clearLayers();
       allPaintedItems = [];
       currentStreetsList = [];
-      let firstGreenSelected = false;
-      let firstAnySelected = false;
 
-      elements.forEach((way, idx) => {
-        if (!way.geometry || way.geometry.length < 2) return;
-        const coords = way.geometry.map(pt => [pt.lat, pt.lon]);
-        const name = (way.tags && way.tags.name) ? way.tags.name : `Via Locale #${idx + 1}`;
+      const safeStreets = [
+        { name: "Via Fra Savonarola", type: "green", coords: [[lat + 0.002, lng - 0.0003], [lat - 0.002, lng - 0.0003]] },
+        { name: "Via Giordano Bruno", type: "blue", coords: [[lat - 0.001, lng - 0.002], [lat - 0.001, lng + 0.002]] },
+        { name: "Via Binella", type: "green", coords: [[lat + 0.0006, lng - 0.002], [lat + 0.0006, lng + 0.002]] },
+        { name: "Via Abramo Lincoln", type: "blue", coords: [[lat + 0.002, lng + 0.0012], [lat - 0.002, lng + 0.0012]] },
+        { name: "Via Cottolengo", type: "yellow", coords: [[lat + 0.002, lng - 0.001], [lat - 0.002, lng - 0.001]] }
+      ];
 
-        let type = 'blue';
-        if (idx % 3 === 0) type = 'green';
-        else if (idx % 3 === 1) type = 'blue';
-        else type = 'yellow';
-
-        drawColoredStreet(coords, name, type, idx);
-        currentStreetsList.push({ name, type, coords });
-
-        const mid = coords[Math.floor(coords.length / 2)];
-        if (!firstGreenSelected && type === 'green') {
-          firstGreenSelected = true;
-          firstAnySelected = true;
-          selectStreetData(name, type, mid);
-        } else if (!firstAnySelected && idx === 0) {
-          firstAnySelected = true;
-          selectStreetData(name, type, mid);
-        }
+      safeStreets.forEach((st, idx) => {
+        drawColoredStreet(st.coords, st.name, st.type, idx);
+        currentStreetsList.push({ name: st.name, type: st.type, coords: st.coords });
       });
+
+      selectStreetData("Via Fra Savonarola", "green", [lat, lng]);
+      showRadarLoader(false);
     }
 
     async function paintStreetsAround(lat, lng) {
-      lastPaintedLat = lat;
-      lastPaintedLng = lng;
+      showRadarLoader(true);
 
-      // 1. Si ya tenemos calles guardadas en caché cerca de aquí (<250m), las pintamos en 0.1s sin esperar
+      // Si tarda más de 3 segundos, cargamos de inmediato la base maestra local para evitar bloqueos
+      let timerFallback = setTimeout(() => {
+        loadFallbackMilanGrid(lat, lng);
+      }, 3000);
+
+      const query = `[out:json][timeout:5];way["highway"~"residential|secondary|tertiary|unclassified"](around:250,${lat},${lng});out geom;`;
+      
       try {
-        const cached = JSON.parse(localStorage.getItem('cachedMilanStreets_v2'));
-        if (cached && cached.lat && map.distance([lat, lng], [cached.lat, cached.lng]) < 280 && cached.elements && cached.elements.length > 0) {
-          renderElementsOnMap(cached.elements);
+        const res = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query));
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+
+        clearTimeout(timerFallback);
+
+        if (data.elements && data.elements.length > 0) {
+          streetsLayerGroup.clearLayers();
+          allPaintedItems = [];
+          currentStreetsList = [];
+
+          data.elements.forEach((way, idx) => {
+            if (!way.geometry || way.geometry.length < 2) return;
+            const coords = way.geometry.map(pt => [pt.lat, pt.lon]);
+            const name = (way.tags && way.tags.name) ? way.tags.name : `Via Milano #${idx + 1}`;
+
+            let type = 'blue';
+            if (idx % 3 === 0) type = 'green';
+            else if (idx % 3 === 1) type = 'blue';
+            else type = 'yellow';
+
+            drawColoredStreet(coords, name, type, idx);
+            currentStreetsList.push({ name, type, coords });
+          });
+
+          if (currentStreetsList.length > 0) {
+            selectStreetData(currentStreetsList[0].name, currentStreetsList[0].type, currentStreetsList[0].coords[0]);
+          }
+          showRadarLoader(false);
         } else {
-          showRadarLoader(true);
+          loadFallbackMilanGrid(lat, lng);
         }
       } catch (e) {
-        showRadarLoader(true);
+        clearTimeout(timerFallback);
+        loadFallbackMilanGrid(lat, lng);
       }
-
-      // 2. Consulta ligera y con 12 segundos de margen para que SIEMPRE cargue en móvil
-      const query = `[out:json][timeout:12];way["highway"~"residential|secondary|tertiary|primary|unclassified|living_street"](around:280,${lat},${lng});out geom;`;
-      const mirrors = [
-        'https://overpass-api.de/api/interpreter?data=',
-        'https://overpass.kumi.systems/api/interpreter?data=',
-        'https://lz4.overpass-api.de/api/interpreter?data='
-      ];
-
-      for (const endpoint of mirrors) {
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 11500);
-          const res = await fetch(endpoint + encodeURIComponent(query), { signal: controller.signal });
-          clearTimeout(timer);
-
-          if (!res.ok) continue;
-          const data = await res.json();
-
-          if (data.elements && data.elements.length > 0) {
-            renderElementsOnMap(data.elements);
-            localStorage.setItem('cachedMilanStreets_v2', JSON.stringify({ lat, lng, elements: data.elements }));
-            showRadarLoader(false);
-            return;
-          }
-        } catch (err) {
-          // Pasa al siguiente servidor espejo
-        }
-      }
-
-      showRadarLoader(false);
     }
 
     function drawColoredStreet(coords, name, type, idx) {
@@ -640,7 +609,7 @@
       poly.on('click', () => selectStreetData(name, type, mid));
 
       let marker = null;
-      if (idx % 3 === 0) {
+      if (idx % 2 === 0) {
         const pinIcon = L.divIcon({
           className: '',
           html: `<div translate="no" class="w-5 h-5 rounded-full ${cfg.badgeBg} border border-white shadow flex items-center justify-center text-[9px] font-extrabold">P</div>`,
@@ -655,9 +624,6 @@
       allPaintedItems.push({ type, poly, marker });
     }
 
-    // ==========================================
-    // AVISO AUTOMÁTICO MANOS LIBRES: "DEJÉ LIBRE A 50M" (SIN TOCAR NADA)
-    // ==========================================
     function receiveCommunityFreeSpotAlert(lat, lng, streetName, isOwnReport = false) {
       if (movingCarMarker) map.removeLayer(movingCarMarker);
       if (autoGuideLine) map.removeLayer(autoGuideLine);
@@ -665,7 +631,6 @@
       movingCarCoords = [lat, lng];
       const dist = Math.max(35, Math.min(95, Math.round(map.distance([userLat, userLng], movingCarCoords))));
 
-      // 1. Icono verde brillante "LIBRE" en el lugar exacto
       const leavingCarIcon = L.divIcon({
         className: '',
         html: `
@@ -683,7 +648,6 @@
 
       movingCarMarker = L.marker(movingCarCoords, { icon: leavingCarIcon, zIndexOffset: 980 }).addTo(map);
 
-      // 2. Línea guía punteada verde automática desde tu carrito hasta el hueco libre
       autoGuideLine = L.polyline([[userLat, userLng], movingCarCoords], {
         color: '#10b981',
         weight: 4,
@@ -692,7 +656,6 @@
         className: 'street-line-green'
       }).addTo(map);
 
-      // 3. Actualiza la tarjeta inferior y el banner superior automáticamente
       selectStreetData(streetName, 'green', movingCarCoords);
 
       const banner = document.getElementById('movingCarBanner');
@@ -701,25 +664,22 @@
       banner.classList.remove('hidden');
       banner.classList.add('flex');
 
-      // 4. Autocentra el mapa suavemente para que veas tu auto y el hueco sin tocar la pantalla
       map.flyToBounds([[userLat, userLng], movingCarCoords], { padding: [90, 90], maxZoom: 18, duration: 0.8 });
 
-      // 5. Te avisa automáticamente por voz manos libres
       if (isOwnReport) {
-        speakText(`Has reportado un hueco libre en ${streetName}. Avisando a los conductores cercanos.`);
+        speakText(`Has reportado un hueco libre en ${streetName}.`);
       } else {
-        speakText(`¡Atención! Otro conductor puso Dejé libre a ${dist} metros en ${streetName}. Ruta marcada en verde.`);
+        speakText(`¡Atención! Otro conductor puso Dejé libre a ${dist} metros en ${streetName}. Ruta marcada.`);
       }
     }
 
     function triggerLeavingCarAlert(fromButton = false) {
-      // Elige una calle cercana real de las que están pintadas a unos 50-70 metros
-      let targetLat = userLat + 0.00042;
-      let targetLng = userLng + 0.00028;
+      let targetLat = userLat + 0.0004;
+      let targetLng = userLng + 0.0003;
       let stName = currentSelectedStreet ? currentSelectedStreet.name : "Via Fra Savonarola";
 
-      if (currentStreetsList.length > 1) {
-        const pick = currentStreetsList[1];
+      if (currentStreetsList.length > 0) {
+        const pick = currentStreetsList[0];
         const mid = pick.coords[Math.floor(pick.coords.length / 2)];
         targetLat = mid[0];
         targetLng = mid[1];
@@ -735,9 +695,6 @@
       }
     }
 
-    // ==========================================
-    // DATOS DE CALLE: PROBABILIDAD + TARIFA DÍA/NOCHE EN ZONA AZUL
-    // ==========================================
     function selectStreetData(name, type, targetCoord) {
       const t = i18n[currentLang];
       const distMeters = Math.max(25, Math.round(map.distance([userLat, userLng], targetCoord)));
@@ -862,14 +819,8 @@
       }
     }
 
-    // ==========================================
-    // ARRANQUE GPS + PRECARGA + SIMULADOR DE ALERTA COMUNITARIA AUTOMÁTICA
-    // ==========================================
     window.addEventListener('load', () => {
       setLanguage('es');
-      // Empezamos a descargar y cachear las calles desde el segundo 0 en segundo plano
-      paintStreetsAround(userLat, userLng);
-
       setTimeout(() => {
         const splash = document.getElementById('splashScreen');
         splash.classList.add('opacity-0', 'pointer-events-none');
@@ -892,36 +843,23 @@
             paintStreetsAround(userLat, userLng);
           },
           () => {
-            paintStreetsAround(userLat, userLng);
+            loadFallbackMilanGrid(userLat, userLng);
           },
-          { enableHighAccuracy: true, timeout: 7000 }
+          { enableHighAccuracy: true, timeout: 6000 }
         );
 
         navigator.geolocation.watchPosition(
           (pos) => {
-            const newLat = pos.coords.latitude;
-            const newLng = pos.coords.longitude;
-            const distFromLastPaint = map.distance([lastPaintedLat, lastPaintedLng], [newLat, newLng]);
-
-            userLat = newLat;
-            userLng = newLng;
+            userLat = pos.coords.latitude;
+            userLng = pos.coords.longitude;
             carMarker.setLatLng([userLat, userLng]);
-
-            if (distFromLastPaint > 110) {
-              map.panTo([userLat, userLng]);
-              paintStreetsAround(userLat, userLng);
-            }
           },
           () => {},
           { enableHighAccuracy: true, maximumAge: 2000 }
         );
+      } else {
+        loadFallbackMilanGrid(userLat, userLng);
       }
-
-      // Simulación realista manos libres: a los 9 segundos de ir conduciendo,
-      // otro conductor cercano presiona "Dejé Libre" y tu celular te avisa por voz SIN tocar nada.
-      setTimeout(() => {
-        triggerLeavingCarAlert(false);
-      }, 9000);
     }
 
     function toggleBluetoothVoice() {
@@ -955,7 +893,7 @@
 
     function centerOnCar(forceRepaint = false) {
       map.flyTo([userLat, userLng], 17, { duration: 0.6 });
-      if (forceRepaint && allPaintedItems.length === 0) {
+      if (forceRepaint) {
         paintStreetsAround(userLat, userLng);
       }
     }
@@ -984,8 +922,7 @@
 
     function speakCurrentStreet() {
       if (!currentSelectedStreet) return;
-      const st = currentSelectedStreet;
-      speakText(`${st.name}, a ${st.distMeters} metros.`);
+      speakText(`${currentSelectedStreet.name}, a ${currentSelectedStreet.distMeters} metros.`);
     }
 
     function saveParkedCar() {
