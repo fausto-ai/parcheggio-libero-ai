@@ -51,7 +51,7 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Resplandor de las líneas reales alineadas */
+    /* Resplandor SOLO para las líneas 100% verificadas */
     .street-line-green {
       filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.95));
     }
@@ -60,6 +60,10 @@
     }
     .street-line-yellow {
       filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.95));
+    }
+    /* Gris Plomo Sutil sin resplandor para calles desconocidas */
+    .street-line-unknown {
+      filter: none;
     }
 
     /* Haz de luz delantero del carrito */
@@ -88,7 +92,7 @@
       </div>
     </div>
     <h1 class="text-2xl font-bold tracking-tight">Parcheggio Libero <span class="text-blue-400">AI</span></h1>
-    <p class="text-xs text-slate-400 mt-1">Milano Smart Mobility</p>
+    <p class="text-xs text-slate-400 mt-1">Milano Smart Mobility • Datos Verificados</p>
   </div>
 
   <!-- 2. MODAL RÁPIDO GPS + BLUETOOTH AUDIO -->
@@ -98,9 +102,9 @@
         <i class="fa-solid fa-location-arrow animate-pulse"></i>
         <i class="fa-brands fa-bluetooth-b text-sky-400"></i>
       </div>
-      <h2 id="txtGpsTitle" class="text-xl font-bold mb-2">Activar GPS y Audio Bluetooth</h2>
+      <h2 id="txtGpsTitle" class="text-xl font-bold mb-2">Activar GPS y Radar Verificado</h2>
       <p id="txtGpsDesc" class="text-xs text-slate-300 mb-5 leading-relaxed">
-        Ubicaremos tu auto en vivo y trazaremos con precisión las calles gratuitas, zonas azules y ZTL reales a tu alrededor.
+        Solo pintamos en color las zonas con evidencia confirmada. Las calles sin datos oficiales se muestran en gris sutil (Desconocido).
       </p>
       <button onclick="startDrivingMode()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 font-bold text-base shadow-lg shadow-blue-600/40 flex items-center justify-center gap-3 active:scale-95 transition">
         <i class="fa-solid fa-satellite-dish"></i>
@@ -110,15 +114,15 @@
   </div>
 
   <!-- 3. PANTALLA FLOTANTE DE CARGA REAL (Permanece girando hasta que las calles estén 100% alineadas) -->
-  <div id="radarLoadingOverlay" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 glass-panel px-6 py-4 rounded-2xl border border-blue-400/50 shadow-2xl hidden flex-col items-center text-center gap-2.5 min-w-[250px]">
+  <div id="radarLoadingOverlay" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 glass-panel px-6 py-4 rounded-2xl border border-blue-400/50 shadow-2xl hidden flex-col items-center text-center gap-2.5 min-w-[255px]">
     <div class="relative flex items-center justify-center">
       <div class="w-10 h-10 rounded-full border-2 border-blue-400/30 border-t-blue-400 animate-spin"></div>
       <i class="fa-solid fa-satellite text-blue-400 text-xs absolute"></i>
     </div>
     <div class="leading-tight">
       <div id="txtLoadingRadar" class="text-xs font-bold text-white">Activando el radar...</div>
-      <div id="txtLoadingSub" class="text-[11px] text-slate-300 mt-1">Alineando geometría real de calles</div>
-      <div id="txtLoadingTimer" class="text-[10px] text-blue-400 font-semibold mt-1">Sincronizando con satélites...</div>
+      <div id="txtLoadingSub" class="text-[11px] text-slate-300 mt-1">Verificando datos oficiales de calles</div>
+      <div id="txtLoadingTimer" class="text-[10px] text-blue-400 font-semibold mt-1">Sincronizando (1s)...</div>
     </div>
     <button id="btnRetryRadar" onclick="paintStreetsAround(userLat, userLng)" class="hidden mt-1 px-4 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold active:scale-95 transition">
       Reintentar ahora
@@ -129,7 +133,7 @@
   <div id="topPanel" class="smooth-panel fixed top-0 left-0 right-0 z-20 pt-3 px-3 pb-2 bg-gradient-to-b from-[#131b29]/95 via-[#131b29]/75 to-transparent pointer-events-none">
     <div class="glass-panel rounded-full px-3.5 py-2 flex items-center gap-2.5 shadow-lg pointer-events-auto">
       <i class="fa-solid fa-location-dot text-emerald-400 text-sm"></i>
-      <input id="searchInput" type="text" placeholder="Buscar calle o zona en Milán..." class="bg-transparent border-none outline-none text-xs text-white placeholder-slate-400 w-full" />
+      <input id="searchInput" type="text" placeholder="Buscar calle o zona en Milán..." class="bg-transparent border-none outline-none text-xs text-white placeholder-slate-400 w-full" onkeypress="if(event.key==='Enter') searchLocation()" />
       
       <button onclick="toggleBluetoothVoice()" id="btStatusBtn" class="flex items-center gap-1 bg-blue-500/20 border border-blue-400/40 text-blue-300 px-2 py-1 rounded-full text-[10px] font-bold shrink-0" title="Audio Bluetooth / Voz">
         <i class="fa-brands fa-bluetooth-b text-xs"></i>
@@ -141,21 +145,26 @@
       </button>
     </div>
 
-    <!-- Filtros de colores -->
-    <div class="flex items-center justify-between gap-2 mt-2 px-1 overflow-x-auto no-scrollbar pointer-events-auto text-[11px]">
-      <button onclick="filterStreets('green')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 px-2.5 py-1 rounded-full border border-emerald-500/40 active:scale-95">
+    <!-- Leyenda / Filtros de colores incluyendo el Gris Plomo "Desconocido" -->
+    <div class="flex items-center justify-between gap-1.5 mt-2 px-0.5 overflow-x-auto no-scrollbar pointer-events-auto text-[10px]">
+      <button onclick="filterStreets('green')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/85 px-2.5 py-1 rounded-full border border-emerald-500/40 active:scale-95">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-        <span id="legFree" class="font-medium text-white">Gratis (Blanca)</span>
+        <span id="legFree" class="font-medium text-white">Gratis</span>
       </button>
 
-      <button onclick="filterStreets('blue')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 px-2.5 py-1 rounded-full border border-blue-500/40 active:scale-95">
+      <button onclick="filterStreets('blue')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/85 px-2.5 py-1 rounded-full border border-blue-500/40 active:scale-95">
         <span class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
-        <span id="legPaid" class="font-medium text-white">De pago (Azul)</span>
+        <span id="legPaid" class="font-medium text-white">Azul</span>
       </button>
 
-      <button onclick="filterStreets('yellow')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/80 px-2.5 py-1 rounded-full border border-amber-400/40 active:scale-95">
+      <button onclick="filterStreets('yellow')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/85 px-2.5 py-1 rounded-full border border-amber-400/40 active:scale-95">
         <span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>
-        <span id="legZtl" class="font-medium text-white">Residentes / ZTL</span>
+        <span id="legZtl" class="font-medium text-white">ZTL / Res.</span>
+      </button>
+
+      <button onclick="filterStreets('unknown')" class="flex items-center gap-1.5 shrink-0 bg-slate-900/85 px-2.5 py-1 rounded-full border border-slate-500/40 active:scale-95">
+        <span class="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span>
+        <span id="legUnknown" class="font-medium text-slate-300">Desconocido</span>
       </button>
 
       <button onclick="filterStreets('all')" class="flex items-center gap-1 shrink-0 bg-blue-600/30 px-2.5 py-1 rounded-full border border-blue-400/40 text-blue-300 font-semibold active:scale-95">
@@ -164,19 +173,19 @@
     </div>
   </div>
 
-  <!-- 5. PÍLDORA COMPACTA DE PROBABILIDAD IA -->
-  <div id="miniSpotPill" onclick="focusBestSpot()" class="smooth-panel fixed top-28 left-3 z-20 glass-panel rounded-xl px-2.5 py-1.5 shadow-lg cursor-pointer active:scale-95 transition border border-white/10 max-w-[148px]">
+  <!-- 5. PÍLDORA COMPACTA DE RESUMEN DE ZONA VERIFICADA -->
+  <div id="miniSpotPill" onclick="focusBestSpot()" class="smooth-panel fixed top-28 left-3 z-20 glass-panel rounded-xl px-2.5 py-1.5 shadow-lg cursor-pointer active:scale-95 transition border border-white/10 max-w-[162px]">
     <div class="flex items-center gap-2">
-      <div id="badgeMiniColor" class="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow">
+      <div id="badgeMiniColor" class="w-6 h-6 rounded-lg bg-slate-600 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow">
         P
       </div>
       <div class="leading-tight">
         <div class="flex items-center gap-1">
-          <span id="txtSpotFound" class="text-[9px] uppercase tracking-wider text-slate-300 font-semibold">Prob. IA</span>
-          <span id="txtProbPct" class="text-[10px] font-extrabold text-emerald-400">--%</span>
+          <span id="txtSpotFound" class="text-[9px] uppercase tracking-wider text-slate-300 font-semibold">Verificado</span>
+          <span id="txtProbPct" class="text-[10px] font-extrabold text-emerald-400">--</span>
         </div>
         <div class="text-[10px] text-slate-400 font-medium">
-          <span id="txtSpotDist">-- m</span> • <span id="txtDriveTime">1 min</span>
+          <span id="txtSpotDist">Escaneando...</span>
         </div>
       </div>
     </div>
@@ -232,15 +241,15 @@
 
       <div class="flex items-center justify-between gap-2 mt-1">
         <div class="flex items-center gap-3 min-w-0">
-          <div id="mainCardP" class="w-11 h-11 rounded-2xl bg-blue-600 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg">
-            P
+          <div id="mainCardP" class="w-11 h-11 rounded-2xl bg-slate-600 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg">
+            ?
           </div>
           <div class="truncate">
             <div id="txtClosestLabel" class="text-[11px] text-slate-400">Calle seleccionada</div>
-            <h3 id="selectedStreetName" class="text-base font-bold text-white truncate">Esperando señal del radar...</h3>
+            <h3 id="selectedStreetName" class="text-base font-bold text-white truncate">Sincronizando radar...</h3>
             <div class="flex items-center gap-2 mt-0.5">
               <span id="selectedBadge" class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-700 text-slate-300 border border-white/10">
-                Sincronizando
+                Desconocido
               </span>
               <span class="text-xs text-slate-300 flex items-center gap-1">
                 <i class="fa-solid fa-location-dot text-[10px] text-slate-400"></i>
@@ -259,9 +268,9 @@
       <div id="sheetCollapsibleContent" class="mt-2.5 transition-all duration-300">
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-slate-900/75 border border-white/10 rounded-xl p-2 flex items-center gap-2">
-            <i class="fa-solid fa-chart-pie text-emerald-400 text-xs"></i>
+            <i class="fa-solid fa-circle-check text-slate-400 text-xs" id="iconCardVerify"></i>
             <div class="leading-tight">
-              <div id="lblSpots" class="text-[10px] text-slate-400">Prob. Hueco</div>
+              <div id="lblSpots" class="text-[10px] text-slate-400">Evidencia</div>
               <div id="valSpots" class="text-xs font-bold text-white">--</div>
             </div>
           </div>
@@ -278,16 +287,15 @@
             <i class="fa-solid fa-euro-sign text-slate-400 text-xs"></i>
             <div class="leading-tight">
               <div id="lblCost" class="text-[10px] text-slate-400">Tarifa</div>
-              <div id="valCost" class="text-[11px] font-bold text-emerald-400 leading-tight">--</div>
+              <div id="valCost" class="text-[11px] font-bold text-slate-300 leading-tight">--</div>
               <div id="valCostSub" class="text-[9px] text-slate-400 leading-none mt-0.5">--</div>
             </div>
           </div>
         </div>
 
-        <!-- Aviso honesto anti-multas para proteger siempre al conductor -->
         <div id="txtSafetyNotice" class="text-[10px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1.5">
-          <i class="fa-solid fa-shield-halved text-amber-400"></i>
-          <span>Verifica siempre el cartel vertical de limpieza (AMSA) con <b>Cartel IA</b>.</span>
+          <i class="fa-solid fa-shield-halved text-slate-400"></i>
+          <span>Gris plomo = Sin datos oficiales. Usa <b>Cartel IA</b> al aparcar para confirmar.</span>
         </div>
       </div>
     </div>
@@ -368,28 +376,33 @@
 
     const i18n = {
       es: {
-        gpsTitle: "Activar GPS y Audio Bluetooth",
-        gpsDesc: "Ubicaremos tu auto en vivo y trazaremos con precisión las calles gratuitas, zonas azules y ZTL reales a tu alrededor.",
+        gpsTitle: "Activar GPS y Radar Verificado",
+        gpsDesc: "Solo pintamos en color las zonas con evidencia confirmada. Las calles sin datos oficiales se muestran en gris sutil (Desconocido).",
         gpsBtn: "CONECTAR Y ACTIVAR RADAR",
         loadingRadar: "Activando el radar...",
-        loadingSub: "Alineando geometría real de calles",
+        loadingSub: "Verificando datos oficiales de calles",
         searchPlaceholder: "Buscar calle o zona en Milán...",
-        legFree: "Gratis (Blanca)",
-        legPaid: "De pago (Azul)",
-        legZtl: "Residentes / ZTL",
+        legFree: "Gratis",
+        legPaid: "Azul",
+        legZtl: "ZTL / Res.",
+        legUnknown: "Desconocido",
         legAll: "Todos",
-        spotFound: "Prob. IA",
-        closestLabel: "Calle seleccionada",
-        statusFree: "Residencial / Blanca",
-        statusPaid: "Zona Azul / Principal",
-        statusZtl: "Restringido / ZTL",
+        spotFound: "Verificado",
+        closestLabel: "Calle o parking seleccionado",
+        statusFree: "100% Verificado Gratis",
+        statusPaid: "100% Verificado Pago (Azul)",
+        statusZtl: "Verificado ZTL / Prohibido",
+        statusUnknown: "Desconocido (Sin verificar)",
         btnGo: "Ir",
-        lblSpots: "Prob. Hueco",
+        lblSpots: "Evidencia",
         lblHours: "Regla Horaria",
         lblCost: "Tarifa",
         freeNow: "GRATIS ahora",
         dayRate: "Día: € 1,50/h",
-        alwaysFree: "Verifica limpieza AMSA",
+        alwaysFree: "Confirmado en mapa",
+        unknownRule: "No registrado",
+        unknownCost: "Sin datos",
+        unknownSub: "Mirar cartel en vía",
         navMap: "Mapa",
         navParked: "Aparqué",
         navLeaving: "Dejé Libre",
@@ -399,35 +412,40 @@
         setLangLabel: "Selecciona tu idioma",
         btnCloseSettings: "Cerrar",
         foldSheet: "Plegar panel",
-        expandSheet: "Ver horarios y tarifas",
+        expandSheet: "Ver evidencia y tarifas",
         voiceLang: "es-ES",
-        voiceIntro: "Activando el radar. Alineando las calles de tu ubicación actual.",
-        voiceReady: "Radar alineado y listo.",
-        parkedAlert: "Ubicación del vehículo guardada en memoria."
+        voiceIntro: "Activando el radar de datos verificados.",
+        voiceReady: "Radar alineado.",
+        parkedAlert: "Ubicación del vehículo guardada."
       },
       it: {
-        gpsTitle: "Attiva GPS e Audio Bluetooth",
-        gpsDesc: "Localizzeremo la tua auto live tracciando con precisione le strisce bianche, blu e ZTL reali intorno a te.",
+        gpsTitle: "Attiva GPS e Radar Verificato",
+        gpsDesc: "Coloriamo solo le zone con evidenza confermata. Le vie senza dati ufficiali sono mostrate in grigio sottile (Sconosciuto).",
         gpsBtn: "CONNETTI E ATTIVA RADAR",
-        loadingRadar: "Attivazione radar in corso...",
-        loadingSub: "Allineamento geometria reale delle vie",
+        loadingRadar: "Attivazione radar...",
+        loadingSub: "Verifica dati ufficiali delle vie",
         searchPlaceholder: "Cerca via o zona a Milano...",
-        legFree: "Gratis (Bianche)",
-        legPaid: "A pagamento (Blu)",
-        legZtl: "Residenti / ZTL",
+        legFree: "Gratis",
+        legPaid: "Blu",
+        legZtl: "ZTL / Res.",
+        legUnknown: "Sconosciuto",
         legAll: "Tutti",
-        spotFound: "Prob. IA",
-        closestLabel: "Via selezionata",
-        statusFree: "Residenziale / Bianche",
-        statusPaid: "Strisce Blu / Principale",
-        statusZtl: "Riservato / ZTL",
+        spotFound: "Verificato",
+        closestLabel: "Via o parcheggio selezionato",
+        statusFree: "100% Verificato Gratis",
+        statusPaid: "100% Verificato Strisce Blu",
+        statusZtl: "Verificato ZTL / Divieto",
+        statusUnknown: "Sconosciuto (Non verificato)",
         btnGo: "Vai",
-        lblSpots: "Prob. Posto",
+        lblSpots: "Evidenza",
         lblHours: "Fascia Oraria",
         lblCost: "Tariffa",
         freeNow: "GRATIS ora",
         dayRate: "Giorno: € 1,50/h",
-        alwaysFree: "Verifica lavaggio AMSA",
+        alwaysFree: "Confermato su mappa",
+        unknownRule: "Non registrato",
+        unknownCost: "Nessun dato",
+        unknownSub: "Controlla cartello",
         navMap: "Mappa",
         navParked: "Parcheggiato",
         navLeaving: "Lascio Libero",
@@ -437,35 +455,40 @@
         setLangLabel: "Seleziona Lingua",
         btnCloseSettings: "Chiudi",
         foldSheet: "Riduci pannello",
-        expandSheet: "Mostra orari e tariffe",
+        expandSheet: "Mostra evidenza e tariffe",
         voiceLang: "it-IT",
-        voiceIntro: "Attivazione radar in corso. Allineamento delle vie intorno a te.",
-        voiceReady: "Radar allineato e pronto.",
+        voiceIntro: "Attivazione radar con dati verificati.",
+        voiceReady: "Radar allineato.",
         parkedAlert: "Posizione dell'auto salvata."
       },
       en: {
-        gpsTitle: "Enable GPS & Bluetooth Audio",
-        gpsDesc: "We will locate your car live and accurately align real free streets, blue paid zones and ZTL around you.",
+        gpsTitle: "Enable GPS & Verified Radar",
+        gpsDesc: "We only color zones with confirmed evidence. Streets without official data are shown in subtle gray (Unknown).",
         gpsBtn: "CONNECT & START RADAR",
         loadingRadar: "Activating radar...",
-        loadingSub: "Aligning real street geometry",
+        loadingSub: "Verifying official street data",
         searchPlaceholder: "Search street or area in Milan...",
-        legFree: "Free (White)",
-        legPaid: "Paid (Blue)",
-        legZtl: "Residents / ZTL",
+        legFree: "Free",
+        legPaid: "Blue",
+        legZtl: "ZTL / Res.",
+        legUnknown: "Unknown",
         legAll: "All",
-        spotFound: "AI Prob.",
-        closestLabel: "Selected street",
-        statusFree: "Residential / White",
-        statusPaid: "Blue Zone / Main",
-        statusZtl: "Restricted / ZTL",
+        spotFound: "Verified",
+        closestLabel: "Selected street or parking",
+        statusFree: "100% Verified Free",
+        statusPaid: "100% Verified Paid (Blue)",
+        statusZtl: "Verified ZTL / Restricted",
+        statusUnknown: "Unknown (Unverified)",
         btnGo: "Go",
-        lblSpots: "Spot Prob.",
+        lblSpots: "Evidence",
         lblHours: "Time Rule",
         lblCost: "Rate",
         freeNow: "FREE now",
         dayRate: "Day: € 1.50/h",
-        alwaysFree: "Check street cleaning",
+        alwaysFree: "Confirmed on map",
+        unknownRule: "Not recorded",
+        unknownCost: "No data",
+        unknownSub: "Check street sign",
         navMap: "Map",
         navParked: "Parked",
         navLeaving: "Leaving Spot",
@@ -475,10 +498,10 @@
         setLangLabel: "Select Language",
         btnCloseSettings: "Close",
         foldSheet: "Collapse panel",
-        expandSheet: "Show hours & rates",
+        expandSheet: "Show evidence & rates",
         voiceLang: "en-US",
-        voiceIntro: "Activating radar. Aligning real streets around your location.",
-        voiceReady: "Radar aligned and ready.",
+        voiceIntro: "Activating verified data radar.",
+        voiceReady: "Radar aligned.",
         parkedAlert: "Car location saved."
       }
     };
@@ -497,7 +520,6 @@
     let loadingSecondsInterval = null;
 
     let allPaintedItems = [];
-    let currentStreetsList = [];
     let streetsLayerGroup = L.layerGroup();
     let movingCarMarker = null;
     let autoGuideLine = null;
@@ -542,7 +564,7 @@
     const carMarker = L.marker([userLat, userLng], { icon: carIcon, zIndexOffset: 1000 }).addTo(map);
 
     // ==========================================
-    // 3. CONTROL DEL CARTEL DE CARGA (RUEDITA SIEMPRE VISIBLE HASTA ALINEAR)
+    // 3. CONTROL DEL CARTEL DE CARGA (HASTA ALINEAR)
     // ==========================================
     function showRadarLoader(show, showRetryBtn = false) {
       const loader = document.getElementById('radarLoadingOverlay');
@@ -560,14 +582,14 @@
         retryBtn.classList.add('hidden');
 
         let sec = 1;
-        timerTxt.innerText = `Escaneando vías reales (${sec}s)...`;
+        timerTxt.innerText = `Sincronizando (${sec}s)...`;
         loadingSecondsInterval = setInterval(() => {
           sec++;
-          timerTxt.innerText = `Alineando calles con precisión (${sec}s)...`;
+          timerTxt.innerText = `Alineando calles y evidencia (${sec}s)...`;
         }, 1000);
       } else {
         if (showRetryBtn) {
-          timerTxt.innerText = "El servidor de mapas tardó en responder.";
+          timerTxt.innerText = "El servidor tardó en responder.";
           retryBtn.classList.remove('hidden');
         } else {
           loader.classList.add('hidden');
@@ -577,20 +599,24 @@
     }
 
     // ==========================================
-    // 4. CLASIFICACIÓN VIAL REAL (CERO COLORES INVENTADOS AL AZAR)
+    // 4. REGLA DE ORO: SOLO EVIDENCIA 100% REAL -> RESTO "UNKNOWN" (GRIS PLOMO SUTIL)
     // ==========================================
-    function classifyRealStreetType(tags) {
-      if (!tags) return 'green';
+    function classifyVerifiedStreet(tags) {
+      if (!tags) return 'unknown';
 
       const hw = tags.highway || '';
       const access = tags.access || '';
       const fee = tags.fee || '';
-      const parkingBoth = tags['parking:lane:both'] || tags['parking:both'] || '';
-      const parkingLeft = tags['parking:lane:left'] || tags['parking:left'] || '';
-      const parkingRight = tags['parking:lane:right'] || tags['parking:right'] || '';
-      const parkingCond = tags['parking:condition:both'] || tags['parking:condition:right'] || tags['parking:condition:left'] || '';
+      const ztl = tags['zone:traffic'] || '';
 
-      // 1. Zonas restringidas, peatonales, privadas o prohibidas -> AMARILLO (Residentes / ZTL / No aparcar)
+      const pBoth = tags['parking:lane:both'] || tags['parking:both'] || '';
+      const pLeft = tags['parking:lane:left'] || tags['parking:left'] || '';
+      const pRight = tags['parking:lane:right'] || tags['parking:right'] || '';
+      const pCond = tags['parking:condition:both'] || tags['parking:condition:right'] || tags['parking:condition:left'] ||
+                    tags['parking:both:condition'] || tags['parking:right:condition'] || tags['parking:left:condition'] || '';
+      const pFee = tags['parking:both:fee'] || tags['parking:right:fee'] || tags['parking:left:fee'] || '';
+
+      // 1. EVIDENCIA 100% CONFIRMADA DE RESTRICCIÓN / ZTL / RESIDENTES -> AMARILLO
       if (
         hw === 'pedestrian' ||
         hw === 'living_street' ||
@@ -599,40 +625,54 @@
         access === 'no' ||
         access === 'residents' ||
         tags.motor_vehicle === 'no' ||
-        parkingCond === 'residents' ||
-        parkingCond === 'no_parking' ||
-        parkingBoth === 'no_parking' ||
-        parkingBoth === 'no_stopping'
+        ztl.toLowerCase().includes('ztl') ||
+        pCond === 'residents' ||
+        pCond === 'private' ||
+        pCond === 'no_parking' ||
+        pCond === 'no_stopping' ||
+        pBoth === 'no_parking' ||
+        pBoth === 'no_stopping' ||
+        (pLeft === 'no_parking' && pRight === 'no_parking')
       ) {
         return 'yellow';
       }
 
-      // 2. Calles con parquímetro/ticket o avenidas principales/secundarias/terciarias -> AZUL (De pago / Regulada)
+      // 2. EVIDENCIA 100% CONFIRMADA DE PAGO / LÍNEA AZUL -> AZUL
       if (
         fee === 'yes' ||
-        parkingCond === 'ticket' ||
-        parkingCond === 'disc' ||
-        hw === 'primary' ||
-        hw === 'secondary' ||
-        hw === 'tertiary'
+        pFee === 'yes' ||
+        pCond === 'ticket' ||
+        pCond === 'paid' ||
+        pCond === 'meter'
       ) {
         return 'blue';
       }
 
-      // 3. Calles residenciales abiertas sin restricción -> VERDE (Blanca / Residencial Libre)
-      return 'green';
+      // 3. EVIDENCIA 100% CONFIRMADA DE GRATUIDAD / LÍNEA BLANCA -> VERDE
+      if (
+        fee === 'no' ||
+        pFee === 'no' ||
+        pCond === 'free' ||
+        pCond === 'disc'
+      ) {
+        return 'green';
+      }
+
+      // 4. SI NO HAY EVIDENCIA EXPLÍCITA EN LA BASE DE DATOS -> GRIS PLOMO SUTIL ("DESCONOCIDO")
+      return 'unknown';
     }
 
     // ==========================================
-    // 5. MOTOR DE PINTADO 100% ALINEADO (SIN CRUCES FALSAS)
+    // 5. MOTOR DE PINTADO SINCERO (CALLES + PARKINGS REALES VERIFICADOS)
     // ==========================================
     async function paintStreetsAround(lat, lng) {
       if (isFetchingStreets) return;
       isFetchingStreets = true;
       showRadarLoader(true, false);
 
-      // Petición amplia con 35 segundos de margen en cada servidor para garantizar alineación real
-      const query = `[out:json][timeout:30];way["highway"~"residential|secondary|tertiary|primary|unclassified|living_street|pedestrian"](around:300,${lat},${lng});out geom;`;
+      // Consultamos tanto las calles como los Parkings Oficiales (amenity=parking) en 350m a la redonda
+      const query = `[out:json][timeout:30];(way["highway"~"residential|secondary|tertiary|primary|unclassified|living_street|pedestrian"](around:350,${lat},${lng});node["amenity"="parking"](around:380,${lat},${lng});way["amenity"="parking"](around:380,${lat},${lng}););out geom;`;
+
       const mirrors = [
         'https://overpass-api.de/api/interpreter?data=',
         'https://lz4.overpass-api.de/api/interpreter?data=',
@@ -654,42 +694,72 @@
           if (data.elements && data.elements.length > 0) {
             streetsLayerGroup.clearLayers();
             allPaintedItems = [];
-            currentStreetsList = [];
 
-            let closestGreen = null;
-            let closestAny = null;
-            let minGreenDist = 99999;
-            let minAnyDist = 99999;
+            let bestVerifiedSpot = null;
+            let minVerifiedDist = 99999;
+            let closestUnknownStreet = null;
+            let minUnknownDist = 99999;
 
-            data.elements.forEach((way, idx) => {
-              if (!way.geometry || way.geometry.length < 2) return;
-              const coords = way.geometry.map(pt => [pt.lat, pt.lon]);
-              const name = (way.tags && way.tags.name) ? way.tags.name : '';
+            data.elements.forEach((el, idx) => {
+              const tags = el.tags || {};
 
-              // Solo pintamos vías con nombre o trazado real claro
-              const displayName = name || `Tramo Vial #${idx + 1}`;
-              const type = classifyRealStreetType(way.tags);
+              // CASO A: Es un Área o Nodo de Parking Oficial Verificado (amenity=parking)
+              if (tags.amenity === 'parking') {
+                let pLat = el.lat;
+                let pLng = el.lon;
+                if (!pLat && el.geometry && el.geometry.length > 0) {
+                  const midPt = el.geometry[Math.floor(el.geometry.length / 2)];
+                  pLat = midPt.lat;
+                  pLng = midPt.lon;
+                }
+                if (!pLat) return;
 
-              drawColoredStreet(coords, displayName, type, idx, Boolean(name));
-              currentStreetsList.push({ name: displayName, type, coords });
+                let pType = 'green';
+                if (tags.access === 'private' || tags.access === 'residents' || tags.access === 'customers') {
+                  pType = 'yellow';
+                } else if (tags.fee === 'yes') {
+                  pType = 'blue';
+                }
+
+                const pName = tags.name ? `Parking: ${tags.name}` : (pType === 'green' ? 'Parcheggio Pubblico Verificato' : 'Parcheggio Verificato');
+                drawVerifiedParkingNode([pLat, pLng], pName, pType);
+
+                const d = map.distance([lat, lng], [pLat, pLng]);
+                if ((pType === 'green' || pType === 'blue') && d < minVerifiedDist) {
+                  minVerifiedDist = d;
+                  bestVerifiedSpot = { name: pName, type: pType, coord: [pLat, pLng] };
+                }
+                return;
+              }
+
+              // CASO B: Es un tramo de calle
+              if (!el.geometry || el.geometry.length < 2) return;
+              const coords = el.geometry.map(pt => [pt.lat, pt.lon]);
+              const name = tags.name || `Via Locale`;
+              const type = classifyVerifiedStreet(tags);
+
+              drawStreetSegment(coords, name, type, idx, Boolean(tags.name));
 
               const mid = coords[Math.floor(coords.length / 2)];
               const d = map.distance([lat, lng], mid);
 
-              if (type === 'green' && name && d < minGreenDist) {
-                minGreenDist = d;
-                closestGreen = { name: displayName, type, mid };
-              }
-              if (name && d < minAnyDist) {
-                minAnyDist = d;
-                closestAny = { name: displayName, type, mid };
+              if (type !== 'unknown' && d < minVerifiedDist) {
+                minVerifiedDist = d;
+                bestVerifiedSpot = { name, type, coord: mid };
+              } else if (tags.name && d < minUnknownDist) {
+                minUnknownDist = d;
+                closestUnknownStreet = { name, type: 'unknown', coord: mid };
               }
             });
 
-            const bestPick = closestGreen || closestAny;
-            if (bestPick) {
-              selectStreetData(bestPick.name, bestPick.type, bestPick.mid);
+            // Si hay un punto verificado cerca lo destacamos; si no, mostramos la calle actual con honestidad ("Desconocido")
+            const initialPick = bestVerifiedSpot || closestUnknownStreet;
+            if (initialPick) {
+              selectStreetData(initialPick.name, initialPick.type, initialPick.coord);
             }
+
+            // Actualizamos la píldora superior izquierda con el punto verificado más cercano
+            updateMiniVerifiedPill(bestVerifiedSpot);
 
             lastPaintedLat = lat;
             lastPaintedLng = lng;
@@ -699,7 +769,7 @@
             break;
           }
         } catch (err) {
-          // Si un espejo demora, pasa silenciosamente al siguiente mientras la ruedita sigue girando
+          // Intenta el siguiente servidor mientras la ruedita sigue girando
         }
       }
 
@@ -709,19 +779,21 @@
       }
     }
 
-    function drawColoredStreet(coords, name, type, idx, hasRealName) {
+    function drawStreetSegment(coords, name, type, idx, hasRealName) {
       const palette = {
-        green:  { color: '#22c55e', cls: 'street-line-green', badgeBg: 'bg-emerald-500 text-white' },
-        blue:   { color: '#3b82f6', cls: 'street-line-blue',  badgeBg: 'bg-blue-500 text-white' },
-        yellow: { color: '#eab308', cls: 'street-line-yellow',badgeBg: 'bg-amber-400 text-black' }
+        green:   { color: '#22c55e', weight: 6, opacity: 0.92, cls: 'street-line-green',   badgeBg: 'bg-emerald-500 text-white' },
+        blue:    { color: '#3b82f6', weight: 6, opacity: 0.92, cls: 'street-line-blue',    badgeBg: 'bg-blue-500 text-white' },
+        yellow:  { color: '#eab308', weight: 5, opacity: 0.88, cls: 'street-line-yellow',  badgeBg: 'bg-amber-400 text-black' },
+        // Gris plomo sutil y delgado para calles sin datos confirmados
+        unknown: { color: '#64748b', weight: 3.5, opacity: 0.42, cls: 'street-line-unknown', badgeBg: '' }
       };
 
       const cfg = palette[type];
 
       const poly = L.polyline(coords, {
         color: cfg.color,
-        weight: 6,
-        opacity: 0.9,
+        weight: cfg.weight,
+        opacity: cfg.opacity,
         lineCap: 'round',
         lineJoin: 'round',
         className: cfg.cls
@@ -731,11 +803,12 @@
       poly.on('click', () => selectStreetData(name, type, mid));
 
       let marker = null;
-      // Ponemos el icono P de forma limpia solo en calles con nombre y sin amontonar
-      if (hasRealName && idx % 3 === 0) {
+      // SOLO ponemos el circulito (P) donde exista evidencia confirmada (NUNCA en gris desconocido)
+      if (type !== 'unknown' && hasRealName && idx % 2 === 0) {
+        const badgeText = type === 'yellow' ? 'ZTL' : 'P';
         const pinIcon = L.divIcon({
           className: '',
-          html: `<div translate="no" class="w-5 h-5 rounded-full ${cfg.badgeBg} border border-white shadow flex items-center justify-center text-[9px] font-extrabold">P</div>`,
+          html: `<div translate="no" class="w-5 h-5 rounded-full ${cfg.badgeBg} border border-white shadow flex items-center justify-center text-[8px] font-extrabold">${badgeText}</div>`,
           iconSize: [20, 20],
           iconAnchor: [10, 10]
         });
@@ -747,16 +820,86 @@
       allPaintedItems.push({ type, poly, marker });
     }
 
+    function drawVerifiedParkingNode(coord, name, type) {
+      const bg = type === 'green' ? 'bg-emerald-500 text-white' : (type === 'blue' ? 'bg-blue-500 text-white' : 'bg-amber-400 text-black');
+      const pinIcon = L.divIcon({
+        className: '',
+        html: `<div translate="no" class="w-6 h-6 rounded-lg ${bg} border-2 border-white shadow-lg flex items-center justify-center text-[11px] font-extrabold">P</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const marker = L.marker(coord, { icon: pinIcon, zIndexOffset: 500 }).addTo(streetsLayerGroup);
+      marker.on('click', () => selectStreetData(name, type, coord));
+      allPaintedItems.push({ type, poly: null, marker });
+    }
+
+    function updateMiniVerifiedPill(bestVerified) {
+      const miniP = document.getElementById('badgeMiniColor');
+      const probPct = document.getElementById('txtProbPct');
+      const distTxt = document.getElementById('txtSpotDist');
+
+      if (!bestVerified) {
+        miniP.className = "w-6 h-6 rounded-lg bg-slate-600 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
+        probPct.innerText = "0";
+        probPct.className = "text-[10px] font-extrabold text-slate-400";
+        distTxt.innerText = "Zona sin datos";
+        return;
+      }
+
+      const d = Math.max(15, Math.round(map.distance([userLat, userLng], bestVerified.coord)));
+      distTxt.innerText = `a ${d} m`;
+
+      if (bestVerified.type === 'green') {
+        miniP.className = "w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
+        probPct.innerText = "Gratis";
+        probPct.className = "text-[10px] font-extrabold text-emerald-400";
+      } else if (bestVerified.type === 'blue') {
+        miniP.className = "w-6 h-6 rounded-lg bg-blue-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
+        probPct.innerText = "Azul";
+        probPct.className = "text-[10px] font-extrabold text-blue-400";
+      } else {
+        miniP.className = "w-6 h-6 rounded-lg bg-amber-500 flex items-center justify-center font-extrabold text-xs text-black shrink-0 shadow";
+        probPct.innerText = "ZTL";
+        probPct.className = "text-[10px] font-extrabold text-amber-400";
+      }
+    }
+
     // ==========================================
-    // 6. BOTÓN "DEJÉ LIBRE" 100% REAL (SIN INVENTOS AUTOMÁTICOS)
+    // 6. BUSCADOR DE CALLES / ZONAS (EJ. CENTRO DE MILÁN)
+    // ==========================================
+    async function searchLocation() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      try {
+        showRadarLoader(true, false);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Milano, Italia')}&limit=1`);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const newLat = parseFloat(data[0].lat);
+          const newLng = parseFloat(data[0].lon);
+          userLat = newLat;
+          userLng = newLng;
+          carMarker.setLatLng([userLat, userLng]);
+          map.setView([userLat, userLng], 17);
+          isFetchingStreets = false;
+          paintStreetsAround(userLat, userLng);
+        } else {
+          showRadarLoader(false, false);
+        }
+      } catch (e) {
+        showRadarLoader(false, false);
+      }
+    }
+
+    // ==========================================
+    // 7. BOTÓN "DEJÉ LIBRE" REAL
     // ==========================================
     function triggerLeavingCarAlert() {
-      // Usa la coordenada real exacta donde está el auto del usuario que deja el sitio libre
       const spotLat = userLat;
       const spotLng = userLng;
       const stName = currentSelectedStreet ? currentSelectedStreet.name : "Ubicación actual";
 
-      // Guardamos el reporte real con marca de tiempo (expira en 5 minutos)
       const reportData = {
         lat: spotLat,
         lng: spotLng,
@@ -764,7 +907,6 @@
         timestamp: Date.now()
       };
       localStorage.setItem('realLeavingSpotReport', JSON.stringify(reportData));
-
       renderRealLeavingSpotOnMap(reportData, true);
     }
 
@@ -806,16 +948,15 @@
       const banner = document.getElementById('movingCarBanner');
       const alertTxt = document.getElementById('txtMovingCarAlert');
       alertTxt.innerText = dist < 20
-        ? `Hueco libre marcado aquí (${report.streetName})`
+        ? `Hueco libre confirmado aquí (${report.streetName})`
         : `Hueco libre a ${dist}m en ${report.streetName}`;
       banner.classList.remove('hidden');
       banner.classList.add('flex');
 
       if (announceByVoice) {
-        speakText(`Has marcado un hueco libre en ${report.streetName}. El aviso estará activo durante 5 minutos.`);
+        speakText(`Has confirmado un hueco libre con evidencia en ${report.streetName}.`);
       }
 
-      // Se borra automáticamente a los 5 minutos para no mostrar huecos viejos
       leavingAlertTimeout = setTimeout(() => {
         clearLeavingCarAlert();
       }, 300000);
@@ -837,7 +978,7 @@
     }
 
     // ==========================================
-    // 7. DETALLES DE LA CALLE SELECCIONADA + REGLAS HORARIAS REALES
+    // 8. TARJETA DE DETALLE CON TRANSPARENCIA TOTAL
     // ==========================================
     function selectStreetData(name, type, targetCoord) {
       const t = i18n[currentLang];
@@ -846,35 +987,27 @@
 
       document.getElementById('selectedStreetName').innerText = name;
       document.getElementById('selectedDist').innerText = `${distMeters} m`;
-      document.getElementById('txtSpotDist').innerText = `${distMeters} m`;
 
       const badge = document.getElementById('selectedBadge');
       const mainP = document.getElementById('mainCardP');
-      const miniP = document.getElementById('badgeMiniColor');
-      const probPct = document.getElementById('txtProbPct');
       const valSpots = document.getElementById('valSpots');
       const valHours = document.getElementById('valHours');
       const valCost = document.getElementById('valCost');
       const valCostSub = document.getElementById('valCostSub');
+      const iconVerify = document.getElementById('iconCardVerify');
 
       const now = new Date();
       const hour = now.getHours();
-      const day = now.getDay(); // 0 = Domingo
+      const day = now.getDay();
       const isFreeTimeForBlue = (hour >= 19 || hour < 8 || day === 0);
-
-      // Probabilidad estimada según franja horaria real
-      const isPeakHour = (hour >= 8 && hour <= 12) || (hour >= 17 && hour <= 20);
-      const greenProb = isPeakHour ? "72%" : "85%";
-      const blueProb = isPeakHour ? "60%" : "78%";
 
       if (type === 'green') {
         badge.innerText = t.statusFree;
         badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        mainP.innerText = "P";
         mainP.className = "w-11 h-11 rounded-2xl bg-emerald-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg";
-        miniP.className = "w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
-        probPct.innerText = greenProb;
-        probPct.className = "text-[10px] font-extrabold text-emerald-400";
-        valSpots.innerText = `Alta (${greenProb})`;
+        iconVerify.className = "fa-solid fa-circle-check text-emerald-400 text-xs";
+        valSpots.innerText = "Verificado";
         valHours.innerText = "00:00 - 24:00";
         valCost.innerText = t.freeNow;
         valCost.className = "text-[11px] font-bold text-emerald-400 leading-tight";
@@ -882,11 +1015,10 @@
       } else if (type === 'blue') {
         badge.innerText = t.statusPaid;
         badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30";
+        mainP.innerText = "P";
         mainP.className = "w-11 h-11 rounded-2xl bg-blue-500 flex items-center justify-center text-xl font-extrabold text-white shrink-0 shadow-lg";
-        miniP.className = "w-6 h-6 rounded-lg bg-blue-500 flex items-center justify-center font-extrabold text-xs text-white shrink-0 shadow";
-        probPct.innerText = blueProb;
-        probPct.className = "text-[10px] font-extrabold text-blue-400";
-        valSpots.innerText = `Media (${blueProb})`;
+        iconVerify.className = "fa-solid fa-circle-check text-blue-400 text-xs";
+        valSpots.innerText = "Verificado";
         valHours.innerText = "08:00 - 19:00";
 
         if (isFreeTimeForBlue) {
@@ -898,15 +1030,29 @@
           valCost.className = "text-[11px] font-bold text-blue-400 leading-tight";
           valCostSub.innerText = "Gratis > 19:00";
         }
-      } else {
+      } else if (type === 'yellow') {
         badge.innerText = t.statusZtl;
         badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        mainP.innerText = "!";
         mainP.className = "w-11 h-11 rounded-2xl bg-amber-500 flex items-center justify-center text-xl font-extrabold text-black shrink-0 shadow-lg";
+        iconVerify.className = "fa-solid fa-triangle-exclamation text-amber-400 text-xs";
         valSpots.innerText = "Restringido";
         valHours.innerText = "24/7 ZTL / Res.";
         valCost.innerText = "No aparcar";
         valCost.className = "text-[11px] font-bold text-amber-400 leading-tight";
         valCostSub.innerText = "Riesgo Multa €83";
+      } else {
+        // ESTADO HONESTO: DESCONOCIDO (GRIS PLOMO)
+        badge.innerText = t.statusUnknown;
+        badge.className = "px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-700/80 text-slate-300 border border-slate-500/40";
+        mainP.innerText = "?";
+        mainP.className = "w-11 h-11 rounded-2xl bg-slate-600 flex items-center justify-center text-xl font-extrabold text-slate-200 shrink-0 shadow-lg";
+        iconVerify.className = "fa-solid fa-circle-question text-slate-400 text-xs";
+        valSpots.innerText = "Sin datos";
+        valHours.innerText = t.unknownRule;
+        valCost.innerText = t.unknownCost;
+        valCost.className = "text-[11px] font-bold text-slate-300 leading-tight";
+        valCostSub.innerText = t.unknownSub;
       }
     }
 
@@ -914,10 +1060,10 @@
       allPaintedItems.forEach(item => {
         const show = (filterType === 'all' || item.type === filterType);
         if (show) {
-          if (!streetsLayerGroup.hasLayer(item.poly)) streetsLayerGroup.addLayer(item.poly);
+          if (item.poly && !streetsLayerGroup.hasLayer(item.poly)) streetsLayerGroup.addLayer(item.poly);
           if (item.marker && !streetsLayerGroup.hasLayer(item.marker)) streetsLayerGroup.addLayer(item.marker);
         } else {
-          if (streetsLayerGroup.hasLayer(item.poly)) streetsLayerGroup.removeLayer(item.poly);
+          if (item.poly && streetsLayerGroup.hasLayer(item.poly)) streetsLayerGroup.removeLayer(item.poly);
           if (item.marker && streetsLayerGroup.hasLayer(item.marker)) streetsLayerGroup.removeLayer(item.marker);
         }
       });
@@ -971,7 +1117,7 @@
     }
 
     // ==========================================
-    // 8. ARRANQUE DEL RADAR Y SEGUIMIENTO GPS REAL
+    // 9. ARRANQUE DEL RADAR Y SEGUIMIENTO GPS REAL
     // ==========================================
     window.addEventListener('load', () => {
       setLanguage('es');
@@ -999,7 +1145,6 @@
             paintStreetsAround(userLat, userLng);
           },
           () => {
-            // Si tarda el GPS del móvil, escanea la ubicación actual en vista
             paintStreetsAround(userLat, userLng);
           },
           { enableHighAccuracy: true, timeout: 10000 }
@@ -1127,6 +1272,7 @@
       document.getElementById('legFree').innerText = t.legFree;
       document.getElementById('legPaid').innerText = t.legPaid;
       document.getElementById('legZtl').innerText = t.legZtl;
+      document.getElementById('legUnknown').innerText = t.legUnknown;
       document.getElementById('legAll').innerText = t.legAll;
 
       document.getElementById('txtSpotFound').innerText = t.spotFound;
